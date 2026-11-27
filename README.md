@@ -1,47 +1,381 @@
-# Java OOP Learning Notes --- 24 November 2026
+# Object-Oriented Programming (OOP) in Java -- Complete Notes
 
-Today I studied three important Object-Oriented Programming (OOP)
-concepts in Java:
+These notes cover the five core OOP concepts in Java:
 
-1.  Polymorphism
-2.  Encapsulation
-3.  Abstraction
+1.  Inheritance
+2.  Polymorphism
+3.  Encapsulation
+4.  Abstraction
+5.  Interfaces
 
-These are three of the four pillars of OOP. The fourth pillar is
-inheritance.
+For each concept, understand the definition, purpose, syntax, examples,
+rules, advantages, and interview explanations.
 
 ------------------------------------------------------------------------
 
-# 1. Polymorphism in Java
+# 1. Inheritance in Java
 
-## 1.1 Meaning
+## 1.1 What is inheritance?
 
-Polymorphism means **one thing having many forms**.
+Inheritance is an OOP concept in which one class acquires accessible
+properties and behaviors of another class.
 
-In Java, the same method call can behave differently depending on the
-arguments passed or the actual object involved.
+-   **Parent class / superclass:** The class whose members are
+    inherited.
+-   **Child class / subclass:** The class that inherits from another
+    class.
 
-Java supports two main types:
+Inheritance promotes code reuse and represents an **IS-A relationship**.
 
--   Compile-time polymorphism --- method overloading.
--   Runtime polymorphism --- method overriding.
+Examples:
 
-## 1.2 Compile-time polymorphism: Method overloading
+-   Car IS-A Vehicle.
+-   Dog IS-A Animal.
+-   Manager IS-A Employee.
+
+## 1.2 Why do we need inheritance?
+
+Suppose `Car` and `Bike` both need a `brand`, `speed`, and `start()`
+method. Without inheritance, the same code may be repeated in both
+classes.
+
+That causes:
+
+-   Code duplication.
+-   More places to update when behavior changes.
+-   Harder maintenance.
+-   Reduced reuse.
+
+A common parent class can hold shared behavior.
+
+## 1.3 Syntax
+
+``` java
+class Parent {
+    // Variables and methods
+}
+
+class Child extends Parent {
+    // Additional variables and methods
+}
+```
+
+Java uses the `extends` keyword for class inheritance.
+
+## 1.4 Example
+
+``` java
+class Vehicle {
+    String brand = "Toyota";
+
+    void start() {
+        System.out.println("Vehicle is starting");
+    }
+
+    void stop() {
+        System.out.println("Vehicle is stopping");
+    }
+}
+
+class Car extends Vehicle {
+    void drive() {
+        System.out.println("Car is driving");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Car car = new Car();
+
+        car.start();  // Inherited from Vehicle
+        car.stop();   // Inherited from Vehicle
+        car.drive();  // Defined in Car
+
+        System.out.println(car.brand);
+    }
+}
+```
+
+Output:
+
+``` text
+Vehicle is starting
+Vehicle is stopping
+Car is driving
+Toyota
+```
+
+When `Car` extends `Vehicle`, a `Car` object can use accessible
+inherited members of `Vehicle` as well as its own members.
+
+## 1.5 Types of inheritance
+
+### A. Single inheritance
+
+One child class inherits from one parent class.
+
+``` text
+Animal
+  |
+ Dog
+```
+
+``` java
+class Animal {
+    void eat() {
+        System.out.println("Animal is eating");
+    }
+}
+
+class Dog extends Animal {
+    void bark() {
+        System.out.println("Dog is barking");
+    }
+}
+```
+
+### B. Multilevel inheritance
+
+A class inherits from a class that itself inherits from another class.
+
+``` text
+Animal
+  |
+ Dog
+  |
+Labrador
+```
+
+``` java
+class Animal {
+    void eat() {
+        System.out.println("Eating");
+    }
+}
+
+class Dog extends Animal {
+    void bark() {
+        System.out.println("Barking");
+    }
+}
+
+class Labrador extends Dog {
+    void friendly() {
+        System.out.println("Labrador is friendly");
+    }
+}
+```
+
+A `Labrador` object can access the accessible methods inherited from
+both `Dog` and `Animal`.
+
+### C. Hierarchical inheritance
+
+Multiple child classes inherit from one parent class.
+
+``` text
+       Animal
+       /    \
+     Dog    Cat
+```
+
+``` java
+class Animal {
+    void eat() {
+        System.out.println("Eating");
+    }
+}
+
+class Dog extends Animal {
+    void bark() {
+        System.out.println("Barking");
+    }
+}
+
+class Cat extends Animal {
+    void meow() {
+        System.out.println("Meowing");
+    }
+}
+```
+
+Both `Dog` and `Cat` inherit `eat()`.
+
+### D. Multiple inheritance
+
+Multiple inheritance means one class inherits from more than one parent
+class.
+
+Java does **not** support multiple inheritance through classes.
+
+``` java
+class Father {
+    void show() {}
+}
+
+class Mother {
+    void show() {}
+}
+
+// Invalid Java:
+class Child extends Father, Mother {
+}
+```
+
+One reason is ambiguity: if both parent classes provide a method with
+the same signature, which implementation should the child inherit? This
+is commonly illustrated by the diamond problem.
+
+Java does support a class implementing multiple interfaces. See the
+Interfaces section.
+
+### E. Hybrid inheritance
+
+Hybrid inheritance combines multiple inheritance structures. Java does
+not support every hybrid structure through classes alone, but
+combinations involving interfaces are possible.
+
+## 1.6 Important inheritance rules
+
+1.  A Java class can directly extend only one class.
+2.  Constructors are **not inherited**.
+3.  A child constructor can invoke a parent constructor using `super()`.
+4.  Private members cannot be accessed directly by a child class. They
+    may still be part of the parent object, but access must be provided
+    through permitted parent methods.
+5.  A `final` class cannot be extended.
+6.  A child class can override eligible inherited instance methods.
+
+### Constructor example
+
+``` java
+class Parent {
+    Parent() {
+        System.out.println("Parent constructor");
+    }
+}
+
+class Child extends Parent {
+    Child() {
+        super();
+        System.out.println("Child constructor");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        new Child();
+    }
+}
+```
+
+Output:
+
+``` text
+Parent constructor
+Child constructor
+```
+
+The parent constructor executes before the child constructor. If no
+explicit constructor invocation is written, Java normally inserts an
+implicit `super()` when applicable.
+
+### `final` prevents inheritance
+
+``` java
+final class Parent {
+}
+
+// Compilation error:
+class Child extends Parent {
+}
+```
+
+## 1.7 The `super` keyword
+
+`super` refers to the immediate parent-class portion of the current
+object.
+
+Common uses:
+
+1.  Access a parent field hidden by a child field.
+2.  Call a parent method overridden by the child.
+3.  Invoke a parent constructor.
+
+``` java
+class Parent {
+    String name = "Parent";
+
+    void show() {
+        System.out.println("Parent method");
+    }
+}
+
+class Child extends Parent {
+    String name = "Child";
+
+    void display() {
+        System.out.println(super.name);
+        super.show();
+    }
+}
+```
+
+Output:
+
+``` text
+Parent
+Parent method
+```
+
+A `super(...)` constructor call must be the first statement in a
+constructor. It can be used to select a parent constructor.
+
+## 1.8 When should you use inheritance?
+
+Use inheritance when there is a genuine IS-A relationship and the child
+should be substitutable for the parent.
+
+Do not use inheritance only to reuse a few lines of code. Composition
+(having one object use another object) can be a better design when there
+is no genuine IS-A relationship.
+
+## 1.9 Interview answer
+
+**Inheritance is an OOP concept in which a child class acquires
+accessible fields and methods from a parent class using the `extends`
+keyword. It promotes code reusability and represents an IS-A
+relationship.**
+
+------------------------------------------------------------------------
+
+# 2. Polymorphism in Java
+
+## 2.1 What is polymorphism?
+
+The word polymorphism comes from:
+
+-   Poly = many
+-   Morph = forms
+
+Polymorphism means **many forms**. In Java, it allows the same method
+name or parent-type reference to be associated with different behavior
+depending on the method signature or actual object.
+
+## 2.2 Types of polymorphism
+
+1.  Compile-time polymorphism --- commonly achieved through method
+    overloading.
+2.  Runtime polymorphism --- achieved through method overriding and
+    dynamic method dispatch.
+
+## 2.3 Compile-time polymorphism: Method overloading
 
 Method overloading means defining multiple methods with the same name
-but different parameter lists in the same class.
-
-The parameter lists can differ by:
-
--   Number of parameters.
--   Types of parameters.
--   Order of parameter types.
-
-### Example
+but different parameter lists.
 
 ``` java
 class Calculator {
-
     int add(int a, int b) {
         return a + b;
     }
@@ -74,24 +408,54 @@ Output:
 31.0
 ```
 
-The compiler selects the matching overloaded method based on the
-arguments.
+The compiler selects the most appropriate overload based on the
+arguments and Java's method-invocation rules.
 
-**Important:** Methods cannot be overloaded by changing only their
-return type. The method name and parameter list would still be
-identical.
+### Ways to overload a method
 
-## 1.3 Runtime polymorphism: Method overriding
+**Different number of parameters:**
 
-Method overriding occurs when a child class provides its own
-implementation of an inherited instance method.
+``` java
+void show(int a) {}
+void show(int a, int b) {}
+```
 
-### Example
+**Different parameter types:**
+
+``` java
+void show(int a) {}
+void show(double a) {}
+```
+
+**Different order of parameter types:**
+
+``` java
+void show(int a, String b) {}
+void show(String a, int b) {}
+```
+
+Changing only the return type does **not** create a valid overload:
+
+``` java
+int add(int a, int b) {
+    return a + b;
+}
+
+// Invalid: same method name and parameter list
+double add(int a, int b) {
+    return a + b;
+}
+```
+
+## 2.4 Runtime polymorphism: Method overriding
+
+Method overriding occurs when a subclass provides its own implementation
+of an eligible instance method inherited from its parent class.
 
 ``` java
 class Animal {
     void sound() {
-        System.out.println("Animal makes a sound");
+        System.out.println("Animal makes sound");
     }
 }
 
@@ -111,11 +475,13 @@ class Cat extends Animal {
 
 public class Main {
     public static void main(String[] args) {
-        Animal animal1 = new Dog();
-        Animal animal2 = new Cat();
+        Animal animal;
 
-        animal1.sound();
-        animal2.sound();
+        animal = new Dog();
+        animal.sound();
+
+        animal = new Cat();
+        animal.sound();
     }
 }
 ```
@@ -127,250 +493,163 @@ Dog barks
 Cat meows
 ```
 
-### Understanding parent references and child objects
+### Reference type vs actual object type
+
+Consider:
 
 ``` java
 Animal animal = new Dog();
 ```
 
--   `Animal` is the reference type.
--   `animal` is the reference variable.
--   `new Dog()` creates the actual object.
--   The reference type determines which members are accessible at
-    compile time.
--   The actual object type determines which overridden instance method
-    executes at runtime.
+-   Reference type: `Animal`
+-   Actual object type: `Dog`
 
-This is runtime polymorphism.
+The reference type determines which members are available to the
+compiler. For an overridden instance method, the actual object's class
+determines which implementation runs at runtime.
 
-## 1.4 Dynamic method dispatch
+This is called **dynamic method dispatch**.
 
-Dynamic method dispatch is the mechanism Java uses to select the
-overridden instance method at runtime based on the actual object.
+## 2.5 Real-world example: Payment system
 
 ``` java
-Animal animal;
-
-animal = new Dog();
-animal.sound(); // Dog barks
-
-animal = new Cat();
-animal.sound(); // Cat meows
-```
-
-The same reference variable can refer to different child objects, and
-the overridden method behavior changes accordingly.
-
-## 1.5 Variables and methods in polymorphism
-
-Consider:
-
-``` java
-class Parent {
-    int value = 10;
-
-    void show() {
-        System.out.println("Parent method");
+class Payment {
+    void pay(double amount) {
+        System.out.println("Processing payment");
     }
 }
 
-class Child extends Parent {
-    int value = 20;
-
+class UpiPayment extends Payment {
     @Override
-    void show() {
-        System.out.println("Child method");
-    }
-
-    void display() {
-        System.out.println("Child display");
-    }
-}
-
-public class Main {
-    public static void main(String[] args) {
-        Parent obj = new Child();
-
-        System.out.println(obj.value);
-        obj.show();
-
-        // obj.display(); // Compilation error
-    }
-}
-```
-
-Output:
-
-``` text
-10
-Child method
-```
-
-Remember:
-
--   Instance variables are hidden, not overridden. Access to a variable
-    is determined by the reference type.
--   Overridden instance methods are selected using the actual object
-    type at runtime.
--   A parent reference cannot directly access child-only methods that
-    are not declared in the parent type.
-
-## 1.6 Can static methods be overridden?
-
-No. Static methods are hidden, not overridden. Static method calls are
-resolved using the reference or class type.
-
-``` java
-class Parent {
-    static void show() {
-        System.out.println("Parent static method");
-    }
-}
-
-class Child extends Parent {
-    static void show() {
-        System.out.println("Child static method");
-    }
-}
-
-public class Main {
-    public static void main(String[] args) {
-        Parent obj = new Child();
-        obj.show();
-    }
-}
-```
-
-Output:
-
-``` text
-Parent static method
-```
-
-## 1.7 Overloading vs overriding
-
-  -----------------------------------------------------------------------
-  Feature                 Overloading             Overriding
-  ----------------------- ----------------------- -----------------------
-  Polymorphism type       Compile-time            Runtime
-
-  Method name             Same                    Same
-
-  Parameters              Must differ             Must match, subject to
-                                                  overriding rules
-
-  Inheritance             Not required            Inheritance is required
-
-  Method selection        Compiler                Runtime dispatch for
-                                                  instance methods
-
-  Return type             May differ if           Same or compatible
-                          parameters differ       covariant return type
-  -----------------------------------------------------------------------
-
-## 1.8 Why polymorphism is useful
-
--   Reuse a common parent type or interface for different
-    implementations.
--   Add new implementations without rewriting all calling code.
--   Reduce dependence on specific implementation classes.
--   Improve maintainability and extensibility.
-
-### Payment example
-
-``` java
-interface Payment {
-    void pay(double amount);
-}
-
-class UpiPayment implements Payment {
-    @Override
-    public void pay(double amount) {
+    void pay(double amount) {
         System.out.println("Paid using UPI: " + amount);
     }
 }
 
-class CardPayment implements Payment {
+class CardPayment extends Payment {
     @Override
-    public void pay(double amount) {
+    void pay(double amount) {
         System.out.println("Paid using Card: " + amount);
+    }
+}
+
+class PaypalPayment extends Payment {
+    @Override
+    void pay(double amount) {
+        System.out.println("Paid using PayPal: " + amount);
+    }
+}
+
+class PaymentService {
+    void processPayment(Payment payment, double amount) {
+        payment.pay(amount);
     }
 }
 
 public class Main {
     public static void main(String[] args) {
-        Payment payment = new UpiPayment();
-        payment.pay(1000);
+        PaymentService service = new PaymentService();
 
-        payment = new CardPayment();
-        payment.pay(2000);
+        service.processPayment(new UpiPayment(), 1000);
+        service.processPayment(new CardPayment(), 2000);
+        service.processPayment(new PaypalPayment(), 3000);
     }
 }
 ```
 
-Output:
+The service accepts the common parent type `Payment`, but the
+implementation that runs depends on the actual object.
 
-``` text
-Paid using UPI: 1000.0
-Paid using Card: 2000.0
-```
+If a new payment type is added, the service does not need a separate
+method for that type, provided it follows the same parent contract.
+
+## 2.6 Overloading vs overriding
+
+  -----------------------------------------------------------------------
+  Method overloading                  Method overriding
+  ----------------------------------- -----------------------------------
+  Same method name, different         Subclass provides a compatible
+  parameter list                      implementation of an inherited
+                                      method
+
+  Usually occurs within a class, but  Requires inheritance
+  can also involve inheritance        
+
+  Resolved at compile time            Overridden instance method selected
+                                      at runtime
+
+  Return type alone cannot            Return type must be the same or
+  distinguish overloads               covariant
+
+  Does not require inheritance        Requires a parent-child
+                                      relationship
+  -----------------------------------------------------------------------
+
+### Important overriding rules
+
+-   Use `@Override` to let the compiler verify that a method really
+    overrides an inherited method.
+-   An overriding method cannot reduce the visibility of the inherited
+    method.
+-   An overriding method cannot declare broader checked exceptions than
+    the overridden method permits.
+-   `final` methods cannot be overridden.
+-   `private` methods are not inherited as overridable methods.
+-   Static methods are hidden, not overridden.
+-   Constructors cannot be overridden.
+-   A covariant return type is allowed: the overriding method may return
+    a subtype of the original return type.
+
+## 2.7 Interview answer
+
+**Polymorphism means many forms. In Java, it allows a common method name
+or reference to represent different behavior. Method overloading
+provides compile-time polymorphism, while method overriding provides
+runtime polymorphism through dynamic method dispatch.**
 
 ------------------------------------------------------------------------
 
-# 2. Encapsulation in Java
+# 3. Encapsulation in Java
 
-## 2.1 Meaning
+## 3.1 What is encapsulation?
 
-Encapsulation means **combining data (fields) and the methods that
-operate on that data inside a class, while controlling direct access to
-the object's internal state**.
+Encapsulation is the process of grouping data (fields) and the methods
+that operate on that data inside a class, while controlling access to
+the internal state.
 
-In Java, it is commonly achieved using:
+In simple words, encapsulation protects an object's data and provides
+controlled ways to read or modify it.
 
-1.  `private` fields.
-2.  Public methods that provide controlled access.
-3.  Validation inside methods before changing the object's state.
+A bank account is a useful example. Account balance should not be
+changed arbitrarily by outside code. Deposits and withdrawals should
+follow validation rules.
 
-A getter and setter are common tools, but they are not mandatory for
-every field.
+## 3.2 Why do we need encapsulation?
 
-## 2.2 Why encapsulation is needed
-
-Without encapsulation, code outside a class may directly assign invalid
-values to its fields.
-
-### Without encapsulation
+Without controlled access:
 
 ``` java
 class BankAccount {
-    public double balance = 10000;
+    public double balance;
 }
 
 public class Main {
     public static void main(String[] args) {
         BankAccount account = new BankAccount();
-
         account.balance = -50000;
-
-        System.out.println(account.balance);
     }
 }
 ```
 
-Output:
+The code allows an invalid balance.
 
-``` text
--50000.0
-```
+Encapsulation lets the class enforce rules whenever its state changes.
 
-This is undesirable because a bank account should enforce rules about
-its balance.
-
-## 2.3 Using private fields, getters and setters
+## 3.3 Getters and setters
 
 ``` java
 class BankAccount {
-    private double balance = 10000;
+    private double balance;
 
     public double getBalance() {
         return balance;
@@ -389,8 +668,6 @@ public class Main {
     public static void main(String[] args) {
         BankAccount account = new BankAccount();
 
-        System.out.println(account.getBalance());
-
         account.setBalance(5000);
         System.out.println(account.getBalance());
 
@@ -403,35 +680,12 @@ public class Main {
 Output:
 
 ``` text
-10000.0
 5000.0
 Invalid balance
 5000.0
 ```
 
-### Getter
-
-A getter reads a field's value.
-
-``` java
-public double getBalance() {
-    return balance;
-}
-```
-
-### Setter
-
-A setter changes a field's value, optionally after validation.
-
-``` java
-public void setBalance(double balance) {
-    if (balance >= 0) {
-        this.balance = balance;
-    }
-}
-```
-
-### Understanding `this`
+### Understand `this`
 
 ``` java
 this.balance = balance;
@@ -440,44 +694,59 @@ this.balance = balance;
 -   `this.balance` refers to the current object's instance field.
 -   `balance` refers to the method parameter.
 
-## 2.4 Encapsulation does not require setters
+The `this` keyword refers to the current object.
 
-A better bank-account design can expose business operations rather than
-a general-purpose setter.
+## 3.4 Encapsulation using business methods
+
+A class does not need a getter and setter for every field. Often,
+business methods provide safer control.
 
 ``` java
 class BankAccount {
-    private double balance = 10000;
+    private double balance;
 
-    public double getBalance() {
-        return balance;
+    public BankAccount(double initialBalance) {
+        if (initialBalance < 0) {
+            throw new IllegalArgumentException("Invalid initial balance");
+        }
+
+        this.balance = initialBalance;
     }
 
     public void deposit(double amount) {
-        if (amount > 0) {
-            balance += amount;
-        } else {
+        if (amount <= 0) {
             System.out.println("Invalid deposit amount");
+            return;
         }
+
+        balance += amount;
     }
 
     public void withdraw(double amount) {
         if (amount <= 0) {
             System.out.println("Invalid withdrawal amount");
-        } else if (amount > balance) {
-            System.out.println("Insufficient balance");
-        } else {
-            balance -= amount;
+            return;
         }
+
+        if (amount > balance) {
+            System.out.println("Insufficient balance");
+            return;
+        }
+
+        balance -= amount;
+    }
+
+    public double getBalance() {
+        return balance;
     }
 }
 
 public class Main {
     public static void main(String[] args) {
-        BankAccount account = new BankAccount();
+        BankAccount account = new BankAccount(10000);
 
         account.deposit(5000);
-        account.withdraw(2000);
+        account.withdraw(3000);
 
         System.out.println(account.getBalance());
     }
@@ -487,100 +756,133 @@ public class Main {
 Output:
 
 ``` text
-13000.0
+12000.0
 ```
 
-The balance can only be changed through operations that enforce the
-account's rules.
+There is no public `setBalance()` method. The balance changes only
+through operations that enforce the account's rules.
 
-## 2.5 Access modifiers
+## 3.5 Access modifiers in Java
 
-  -------------------------------------------------------------------------------
-  Modifier            Same class     Same package   Subclass in    Other packages
-                                                    another        
-                                                    package        
-  ------------------- -------------- -------------- -------------- --------------
-  `private`           Yes            No             No             No
+Access modifiers control where classes, fields, constructors and methods
+can be accessed.
 
-  Default             Yes            Yes            No             No
-  (package-private)                                                
+  -------------------------------------------------------------------------------------
+  Modifier            Same class     Same package   Subclass in        Other packages
+                                                    another package    (non-subclass)
+  ------------------- -------------- -------------- ------------------ ----------------
+  `private`           Yes            No             No                 No
 
-  `protected`         Yes            Yes            Yes, subject   No general
-                                                    to subclass    access
-                                                    access rules   
+  Default             Yes            Yes            No                 No
+  (package-private)                                                    
 
-  `public`            Yes            Yes            Yes            Yes
-  -------------------------------------------------------------------------------
+  `protected`         Yes            Yes            Yes, subject to    No
+                                                    protected-access   
+                                                    rules              
 
-For encapsulation, `private` is commonly used for internal fields, while
-`public` methods expose selected operations.
+  `public`            Yes            Yes            Yes                Yes
+  -------------------------------------------------------------------------------------
 
-## 2.6 Benefits of encapsulation
+Example:
 
--   Protects an object's internal state from direct modification.
--   Allows validation before data changes.
--   Makes implementation easier to change.
--   Controls which fields can be read or modified.
--   Helps enforce business rules.
+``` java
+class Student {
+    private int id;
+    String name;             // package-private
+    protected int age;
+    public String college;
+}
+```
 
-## 2.7 Encapsulation vs data hiding
+## 3.6 Advantages of encapsulation
 
-Data hiding is an important part of encapsulation, but the two terms are
-not exactly interchangeable.
+1.  **Data protection:** Prevents uncontrolled access to internal state.
+2.  **Validation:** Checks values before changing the object.
+3.  **Maintainability:** Internal implementation can change without
+    requiring callers to change.
+4.  **Control:** The class decides which operations are permitted.
+5.  **Reduced coupling:** Other classes interact through public methods
+    instead of depending on internal fields.
 
--   Data hiding restricts direct access to internal data.
--   Encapsulation combines data and behavior in a class and controls
-    access to its internal state.
+## 3.7 Encapsulation vs data hiding
+
+  -----------------------------------------------------------------------
+  Encapsulation                       Data hiding
+  ----------------------------------- -----------------------------------
+  Groups data and related behavior in Restricts direct access to
+  a class and controls access         implementation details
+
+  Focuses on bundling and controlled  Focuses on restricting visibility
+  interaction                         
+
+  Implemented through classes and     Commonly implemented with access
+  access control                      modifiers such as `private`
+  -----------------------------------------------------------------------
+
+## 3.8 Interview answer
+
+**Encapsulation is an OOP principle in which we bind data and related
+methods inside a class and control access to the data using access
+modifiers. In Java, we commonly declare fields private and expose
+controlled public methods such as getters, setters, or business
+operations.**
 
 ------------------------------------------------------------------------
 
-# 3. Abstraction in Java
+# 4. Abstraction in Java
 
-## 3.1 Meaning
+## 4.1 What is abstraction?
 
-Abstraction means **hiding internal implementation details and exposing
-only the essential functionality to the user**.
+Abstraction means hiding implementation details and exposing only the
+essential functionality to the user.
 
-In simple words:
+In simple words, it focuses on **what an object does**, rather than
+exposing every detail of how it does it.
 
--   Focus on what an object does.
--   Hide the unnecessary details of how it does it.
+Real-world example: When driving a car, a driver uses the steering
+wheel, accelerator and brakes without needing to understand all the
+internal details of the engine or braking system.
 
-For example, when using an ATM, you select an operation such as
-withdrawing cash. You do not need to understand the internal bank-server
-communication or cash-dispenser implementation.
+## 4.2 Why do we need abstraction?
 
-## 3.2 How to achieve abstraction
+In a payment application, a caller may only need to use:
 
-Java provides two main mechanisms:
+``` java
+payment.pay(1000);
+```
+
+The caller does not need to know every internal detail of
+authentication, gateway communication, validation or transaction
+processing.
+
+Abstraction provides a simpler way to interact with complex systems.
+
+## 4.3 How to achieve abstraction in Java
+
+Java mainly provides:
 
 1.  Abstract classes.
 2.  Interfaces.
 
-## 3.3 Abstract class
+## 4.4 Abstract classes
 
-An abstract class is declared using the `abstract` keyword.
+An abstract class is declared using the `abstract` keyword. It cannot be
+instantiated directly.
 
 It can contain:
 
 -   Abstract methods.
--   Concrete methods.
--   Instance variables.
--   Static variables and methods.
+-   Concrete (normal) methods.
+-   Instance fields.
 -   Constructors.
+-   Static methods.
+-   Final methods.
 
-An abstract method has a declaration but no method body.
-
-``` java
-abstract void makeSound();
-```
-
-### Example
+Example:
 
 ``` java
 abstract class Animal {
-
-    abstract void makeSound();
+    abstract void sound();
 
     void eat() {
         System.out.println("Animal is eating");
@@ -589,27 +891,17 @@ abstract class Animal {
 
 class Dog extends Animal {
     @Override
-    void makeSound() {
+    void sound() {
         System.out.println("Dog barks");
-    }
-}
-
-class Cat extends Animal {
-    @Override
-    void makeSound() {
-        System.out.println("Cat meows");
     }
 }
 
 public class Main {
     public static void main(String[] args) {
         Dog dog = new Dog();
-        dog.makeSound();
-        dog.eat();
 
-        Cat cat = new Cat();
-        cat.makeSound();
-        cat.eat();
+        dog.sound();
+        dog.eat();
     }
 }
 ```
@@ -619,60 +911,203 @@ Output:
 ``` text
 Dog barks
 Animal is eating
-Cat meows
-Animal is eating
 ```
 
-The abstract class defines a common structure. Each concrete child class
-provides its own implementation of `makeSound()`.
+The abstract method defines behavior that a concrete subclass must
+implement. The concrete `eat()` method provides shared behavior.
 
-### Can we create an abstract class object?
+## 4.5 Important rules of abstract classes
 
-No, an abstract class cannot be instantiated directly.
+### Rule 1: Cannot instantiate an abstract class
 
 ``` java
 abstract class Animal {
-    abstract void makeSound();
 }
 
-// Animal animal = new Animal(); // Compilation error
+// Invalid:
+Animal animal = new Animal();
 ```
 
-However, a parent reference can refer to a child object:
+You can declare an abstract-class reference and assign it a concrete
+subclass object:
 
 ``` java
 Animal animal = new Dog();
-animal.makeSound(); // Dog barks
 ```
 
-This also demonstrates runtime polymorphism.
+### Rule 2: An abstract class can have a constructor
 
-## 3.4 Interface
+``` java
+abstract class Animal {
+    Animal() {
+        System.out.println("Animal constructor");
+    }
+}
+```
 
-An interface defines a contract that implementing classes agree to
-follow.
+The constructor runs as part of creating a concrete subclass object.
 
-It is declared using the `interface` keyword. A class uses `implements`
-to implement it.
+### Rule 3: An abstract class can have concrete methods
 
-### Example
+``` java
+abstract class Animal {
+    void eat() {
+        System.out.println("Eating");
+    }
+}
+```
+
+### Rule 4: A subclass must implement inherited abstract methods or remain abstract
+
+``` java
+abstract class Animal {
+    abstract void sound();
+}
+
+abstract class Dog extends Animal {
+}
+```
+
+A concrete subclass must implement all inherited abstract methods.
+
+### Rule 5: An abstract method cannot be private, static or final
+
+An abstract method must be implemented by a subclass. `private`,
+`static`, and `final` conflict with that requirement.
+
+## 4.6 Real-world example: Payment abstraction
+
+``` java
+abstract class Payment {
+    abstract void pay(double amount);
+
+    void paymentSuccess() {
+        System.out.println("Payment successful");
+    }
+}
+
+class UpiPayment extends Payment {
+    @Override
+    void pay(double amount) {
+        System.out.println("Processing UPI payment: " + amount);
+        paymentSuccess();
+    }
+}
+
+class CardPayment extends Payment {
+    @Override
+    void pay(double amount) {
+        System.out.println("Processing Card payment: " + amount);
+        paymentSuccess();
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Payment payment = new UpiPayment();
+        payment.pay(5000);
+
+        Payment payment2 = new CardPayment();
+        payment2.pay(10000);
+    }
+}
+```
+
+Output:
+
+``` text
+Processing UPI payment: 5000.0
+Payment successful
+Processing Card payment: 10000.0
+Payment successful
+```
+
+The caller works with the common `Payment` abstraction, while the
+concrete subclasses implement the specific behavior.
+
+## 4.7 Advantages of abstraction
+
+1.  Hides unnecessary implementation details.
+2.  Reduces complexity for callers.
+3.  Makes code easier to understand.
+4.  Helps separate a contract from its implementation.
+5.  Allows multiple implementations behind a common type.
+
+## 4.8 Abstraction vs encapsulation
+
+  -----------------------------------------------------------------------
+  Abstraction                         Encapsulation
+  ----------------------------------- -----------------------------------
+  Hides implementation complexity     Protects and controls access to
+                                      internal state
+
+  Focuses on what an object does      Focuses on how data is stored and
+                                      accessed
+
+  Achieved using abstract classes and Achieved using classes and access
+  interfaces                          modifiers
+
+  Reduces complexity for users of a   Helps preserve valid object state
+  class                               
+  -----------------------------------------------------------------------
+
+Example:
+
+-   Abstraction: Call `withdraw()` without knowing the internal banking
+    process.
+-   Encapsulation: Prevent direct, uncontrolled modification of the
+    account balance.
+
+## 4.9 Interview answer
+
+**Abstraction is the process of hiding internal implementation details
+and exposing only essential functionality. In Java, we achieve
+abstraction using abstract classes and interfaces.**
+
+------------------------------------------------------------------------
+
+# 5. Interfaces in Java
+
+## 5.1 What is an interface?
+
+An interface in Java is a reference type that defines a contract that
+implementing classes agree to follow.
+
+An interface describes capabilities that a class promises to provide.
+
+For example, UPI, card and PayPal payment classes can all provide a
+common `pay()` operation, even though their implementations differ.
+
+## 5.2 Why do we need interfaces?
+
+Suppose two classes have a `pay()` method but no common parent type. It
+becomes harder to write one service method that accepts either
+implementation.
+
+An interface provides that common type and contract.
+
+## 5.3 Creating an interface
 
 ``` java
 interface Payment {
     void pay(double amount);
 }
+```
 
+Implement it with a class:
+
+``` java
 class UpiPayment implements Payment {
     @Override
     public void pay(double amount) {
-        System.out.println("Paid using UPI: " + amount);
+        System.out.println("UPI payment: " + amount);
     }
 }
 
 class CardPayment implements Payment {
     @Override
     public void pay(double amount) {
-        System.out.println("Paid using Card: " + amount);
+        System.out.println("Card payment: " + amount);
     }
 }
 
@@ -690,59 +1125,27 @@ public class Main {
 Output:
 
 ``` text
-Paid using UPI: 1000.0
-Paid using Card: 2000.0
+UPI payment: 1000.0
+Card payment: 2000.0
 ```
 
-The `Payment` interface defines what a payment implementation must
-provide. Each class decides how to perform the payment.
+### Understand the syntax
 
-## 3.5 Important interface rules
+-   `interface Payment`: declares an interface.
+-   `implements Payment`: declares that a class implements the
+    interface.
+-   `Payment payment = new UpiPayment()`: an interface reference holds
+    an object of an implementing class.
 
-### Rule 1: A class implements an interface
+This is also runtime polymorphism.
 
-``` java
-class Dog implements Animal {
-    // Implement required methods
-}
-```
+## 5.4 Important features of interfaces
 
-### Rule 2: A class can implement multiple interfaces
-
-``` java
-interface Camera {
-    void takePhoto();
-}
-
-interface MusicPlayer {
-    void playMusic();
-}
-
-class Smartphone implements Camera, MusicPlayer {
-
-    @Override
-    public void takePhoto() {
-        System.out.println("Taking photo");
-    }
-
-    @Override
-    public void playMusic() {
-        System.out.println("Playing music");
-    }
-}
-```
-
-Java does not allow a class to extend multiple classes, but it does
-allow a class to implement multiple interfaces.
-
-### Rule 3: Interface abstract methods are public by default
-
-An ordinary interface method without a body is implicitly
-`public abstract`.
+### 1. Abstract methods are public and abstract by default
 
 ``` java
 interface Animal {
-    void makeSound();
+    void sound();
 }
 ```
 
@@ -750,15 +1153,22 @@ This is equivalent to:
 
 ``` java
 interface Animal {
-    public abstract void makeSound();
+    public abstract void sound();
 }
 ```
 
-An implementing class must provide a `public` implementation.
+The implementing method must be public:
 
-### Rule 4: Interface fields are constants
+``` java
+class Dog implements Animal {
+    @Override
+    public void sound() {
+        System.out.println("Dog barks");
+    }
+}
+```
 
-Fields declared in an interface are implicitly `public static final`.
+### 2. Interface fields are public, static and final by default
 
 ``` java
 interface Config {
@@ -774,289 +1184,696 @@ interface Config {
 }
 ```
 
-### Rule 5: Interfaces can have implemented methods
-
-Modern Java interfaces can contain:
-
--   `default` methods.
--   `static` methods.
--   `private` methods (Java 9 and later).
+Use it through the interface name:
 
 ``` java
-interface Payment {
+System.out.println(Config.MAX_USERS);
+```
 
-    void pay(double amount);
+The value cannot be reassigned.
 
-    default void printReceipt() {
-        System.out.println("Receipt generated");
+### 3. An interface cannot be instantiated
+
+Invalid:
+
+``` java
+Payment payment = new Payment();
+```
+
+Use an implementing class:
+
+``` java
+Payment payment = new UpiPayment();
+```
+
+### 4. A class can implement multiple interfaces
+
+``` java
+interface Camera {
+    void takePhoto();
+}
+
+interface MusicPlayer {
+    void playMusic();
+}
+
+class Smartphone implements Camera, MusicPlayer {
+    @Override
+    public void takePhoto() {
+        System.out.println("Taking photo");
     }
 
-    static void paymentInfo() {
-        System.out.println("Payment service");
-    }
-
-    private void logPayment() {
-        System.out.println("Payment logged");
+    @Override
+    public void playMusic() {
+        System.out.println("Playing music");
     }
 }
 ```
 
-A private interface method can be used by other implemented methods
-inside the interface; it cannot be called directly by implementing
-classes.
+A class can implement multiple interfaces. This provides multiple
+inheritance of type without allowing a class to extend multiple classes.
 
-## 3.6 Abstract class vs interface
+### 5. An interface can extend other interfaces
+
+``` java
+interface Animal {
+    void eat();
+}
+
+interface Pet extends Animal {
+    void play();
+}
+
+class Dog implements Pet {
+    @Override
+    public void eat() {
+        System.out.println("Dog eats");
+    }
+
+    @Override
+    public void play() {
+        System.out.println("Dog plays");
+    }
+}
+```
+
+An interface uses `extends` to inherit another interface. An interface
+can extend multiple interfaces.
+
+### 6. Default methods
+
+Since Java 8, interfaces can contain default methods with an
+implementation.
+
+``` java
+interface Vehicle {
+    void start();
+
+    default void stop() {
+        System.out.println("Vehicle stopped");
+    }
+}
+
+class Car implements Vehicle {
+    @Override
+    public void start() {
+        System.out.println("Car started");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Car car = new Car();
+
+        car.start();
+        car.stop();
+    }
+}
+```
+
+Output:
+
+``` text
+Car started
+Vehicle stopped
+```
+
+The implementing class inherits the default implementation and may
+override it.
+
+### 7. Static methods in interfaces
+
+Interfaces can contain static methods.
+
+``` java
+interface Calculator {
+    static int add(int a, int b) {
+        return a + b;
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println(Calculator.add(10, 20));
+    }
+}
+```
+
+Output:
+
+``` text
+30
+```
+
+Call an interface static method using the interface name. It is not
+inherited as an instance method by implementing classes.
+
+### 8. Private methods in interfaces
+
+Since Java 9, interfaces can contain private methods. They can help
+share internal logic between default and static methods.
+
+``` java
+interface Notification {
+    private void log() {
+        System.out.println("Notification logged");
+    }
+
+    default void send() {
+        log();
+        System.out.println("Sending notification");
+    }
+}
+```
+
+An implementing class cannot call the private interface method directly.
+
+## 5.5 Interface vs abstract class
 
   -----------------------------------------------------------------------
-  Feature                 Abstract class          Interface
-  ----------------------- ----------------------- -----------------------
-  Declaration             `abstract class`        `interface`
+  Abstract class                      Interface
+  ----------------------------------- -----------------------------------
+  Declared using `abstract class`     Declared using `interface`
 
-  Class relationship      Child uses `extends`    Class uses `implements`
+  A class extends it                  A class implements it
 
-  Methods                 Abstract and concrete   Abstract, default,
-                          methods                 static and private
-                                                  methods
+  Can have instance fields            Fields are implicitly
+                                      `public static final`
 
-  Instance variables      Yes                     No ordinary instance
-                                                  fields
+  Can have constructors               Cannot have constructors
 
-  Fields                  Instance and static     Implicitly
-                          fields                  `public static final`
+  Can have abstract and concrete      Can have abstract, default, static
+  methods                             and private methods
 
-  Constructor             Yes                     No
+  A class can extend only one class   A class can implement multiple
+                                      interfaces
 
-  Multiple inheritance    A class can extend only A class can implement
-                          one class               multiple interfaces
+  Members can have different access   Abstract interface methods are
+  modifiers                           public by default
   -----------------------------------------------------------------------
 
 ### When should you use an abstract class?
 
-Use an abstract class when related classes share state, common
-implementation, or a common base type.
+Use an abstract class when related classes share a common base, state,
+constructors or implementation.
 
-Examples: `Animal`, `Employee`, `Vehicle`.
+Example:
+
+``` text
+       Vehicle
+       /  |  \
+     Car Bike Truck
+```
+
+Vehicles may share fields such as `brand` and `speed`, and common
+behavior such as `start()`.
 
 ### When should you use an interface?
 
-Use an interface when you want to define a capability or contract that
-different classes can implement.
+Use an interface when different classes should follow the same contract,
+even if they are otherwise unrelated.
 
-Examples: `Runnable`, `Comparable`, `Payment`, `Serializable`.
+Example:
 
-## 3.7 Abstraction vs encapsulation
+``` text
+       Printable
+       /       \
+   Invoice    Report
+```
+
+Both `Invoice` and `Report` can implement `Printable`.
+
+## 5.6 Interface default-method conflicts
+
+If two interfaces provide a default method with the same signature, the
+implementing class must resolve the conflict.
+
+``` java
+interface A {
+    default void show() {
+        System.out.println("A");
+    }
+}
+
+interface B {
+    default void show() {
+        System.out.println("B");
+    }
+}
+
+class C implements A, B {
+    @Override
+    public void show() {
+        A.super.show();
+        B.super.show();
+    }
+}
+```
+
+The class explicitly chooses how to resolve the conflict.
+
+## 5.7 Interview answer
+
+**An interface in Java defines a contract that implementing classes must
+follow. It supports abstraction and allows a class to implement multiple
+interfaces. Interfaces can contain abstract methods, constants, default
+methods, static methods and private methods.**
+
+------------------------------------------------------------------------
+
+# 6. How all five OOP concepts work together
+
+Consider an e-commerce application with a payment module.
+
+Requirements:
+
+1.  Support multiple payment methods.
+2.  Protect transaction-related state.
+3.  Hide implementation details.
+4.  Allow new payment methods without changing existing business logic.
+5.  Reuse common functionality.
+
+The following example demonstrates the concepts together.
+
+## Step 1: Create an interface
+
+``` java
+interface Payment {
+    void pay(double amount);
+}
+```
+
+This defines a contract.
+
+**Concept: Interface and abstraction.**
+
+## Step 2: Create an abstract class
+
+``` java
+abstract class BasePayment implements Payment {
+    protected String transactionId;
+
+    public void paymentSuccess() {
+        System.out.println("Payment successful");
+    }
+}
+```
+
+This provides shared functionality.
+
+**Concept: Abstract class and inheritance.**
+
+## Step 3: Create UPI payment
+
+``` java
+class UpiPayment extends BasePayment {
+    @Override
+    public void pay(double amount) {
+        transactionId = "UPI123";
+
+        System.out.println("UPI payment: " + amount);
+        paymentSuccess();
+    }
+}
+```
+
+## Step 4: Create card payment
+
+``` java
+class CardPayment extends BasePayment {
+    @Override
+    public void pay(double amount) {
+        transactionId = "CARD123";
+
+        System.out.println("Card payment: " + amount);
+        paymentSuccess();
+    }
+}
+```
+
+## Step 5: Create payment service
+
+``` java
+class PaymentService {
+    public void processPayment(Payment payment, double amount) {
+        payment.pay(amount);
+    }
+}
+```
+
+## Step 6: Main class
+
+``` java
+public class Main {
+    public static void main(String[] args) {
+        PaymentService service = new PaymentService();
+
+        Payment upi = new UpiPayment();
+        Payment card = new CardPayment();
+
+        service.processPayment(upi, 1000);
+        service.processPayment(card, 2000);
+    }
+}
+```
+
+Output:
+
+``` text
+UPI payment: 1000.0
+Payment successful
+Card payment: 2000.0
+Payment successful
+```
+
+## Where are the five concepts?
 
   -----------------------------------------------------------------------
-  Encapsulation                       Abstraction
+  OOP concept                         Where it is used
   ----------------------------------- -----------------------------------
-  Combines data and behavior and      Hides implementation details
-  controls access                     
+  Inheritance                         `UpiPayment extends BasePayment`
 
-  Focuses on controlled access to     Focuses on exposing essential
-  internal state                      functionality
+  Polymorphism                        `Payment upi = new UpiPayment()`
 
-  Commonly uses private fields and    Commonly uses abstract classes and
-  public methods                      interfaces
+  Encapsulation                       Transaction-related state should be
+                                      controlled through methods
 
-  Example: Private bank balance with  Example: Payment interface
-  deposit and withdraw methods        
+  Abstraction                         Payment interface and abstract
+                                      class
+
+  Interface                           `interface Payment`
   -----------------------------------------------------------------------
 
-Easy way to remember:
-
--   **Encapsulation:** How can someone access or modify my data?
--   **Abstraction:** What functionality should someone see without
-    knowing the internal implementation?
-
-## 3.8 Abstraction in a Spring Boot-style design
-
-A service can depend on an interface rather than a concrete
-implementation.
-
-``` java
-public interface PaymentService {
-    void processPayment(double amount);
-}
-```
-
-Implementations:
-
-``` java
-public class UpiPaymentService implements PaymentService {
-
-    @Override
-    public void processPayment(double amount) {
-        System.out.println("Processing UPI payment: " + amount);
-    }
-}
-```
-
-``` java
-public class CardPaymentService implements PaymentService {
-
-    @Override
-    public void processPayment(double amount) {
-        System.out.println("Processing card payment: " + amount);
-    }
-}
-```
-
-A service can depend on the abstraction:
-
-``` java
-public class OrderService {
-
-    private final PaymentService paymentService;
-
-    public OrderService(PaymentService paymentService) {
-        this.paymentService = paymentService;
-    }
-
-    public void placeOrder(double amount) {
-        paymentService.processPayment(amount);
-    }
-}
-```
-
-This makes the order-processing code less dependent on a specific
-payment implementation. In Spring Boot, dependency injection can provide
-the required implementation.
-
-## 3.9 Benefits of abstraction
-
--   Reduces complexity for users of a class or service.
--   Separates a contract from its implementation.
--   Makes implementations easier to replace.
--   Supports extensibility.
--   Helps reduce coupling when code depends on interfaces.
+**Encapsulation improvement:** In production code, make `transactionId`
+private and expose only the operations or read access that are actually
+required. The example uses `protected` to keep the inheritance
+demonstration simple.
 
 ------------------------------------------------------------------------
 
-# 4. Quick revision: Three OOP pillars
+# 7. Important differences for Java interviews
 
-  ------------------------------------------------------------------------
-  Concept           Meaning           Java mechanism    Example
-  ----------------- ----------------- ----------------- ------------------
-  Polymorphism      Same operation    Overloading and   `Payment.pay()`
-                    can have          overriding        
-                    different forms                     
+## 7.1 Inheritance vs polymorphism
 
-  Encapsulation     Combine data and  Private fields    `BankAccount`
-                    behavior; control and controlled    
-                    access            methods           
+  -----------------------------------------------------------------------
+  Inheritance                         Polymorphism
+  ----------------------------------- -----------------------------------
+  Reuses accessible parent            Allows different implementations or
+  functionality                       forms
 
-  Abstraction       Hide              Abstract classes  `PaymentService`
-                    implementation    and interfaces    
-                    details and                         
-                    expose essential                    
-                    behavior                            
-  ------------------------------------------------------------------------
+  Uses `extends` for class            Achieved through overloading and
+  inheritance                         overriding
 
-Remember the distinction:
+  Represents an IS-A relationship     Represents multiple forms of
+                                      behavior
 
--   **Polymorphism:** One interface or parent type, different behaviors.
--   **Encapsulation:** Protect and control an object's state.
--   **Abstraction:** Expose what is needed and hide implementation
-    details.
+  Helps code reuse                    Helps flexibility and extensibility
+  -----------------------------------------------------------------------
+
+Example of inheritance:
+
+``` java
+class Dog extends Animal {
+}
+```
+
+Example of runtime polymorphism, assuming `sound()` is overridden:
+
+``` java
+Animal animal = new Dog();
+animal.sound();
+```
+
+## 7.2 Abstract class vs interface
+
+Remember:
+
+-   **Abstract class:** Useful when related classes share a common base,
+    state or implementation.
+-   **Interface:** Useful when classes need to follow a common contract
+    or expose a capability.
+
+## 7.3 Encapsulation vs abstraction
+
+Remember:
+
+-   **Encapsulation:** Protecting internal data and controlling access.
+-   **Abstraction:** Hiding implementation complexity and exposing
+    essential operations.
+
+Example:
+
+-   Encapsulation: The account balance is private.
+-   Abstraction: The caller uses `withdraw()` without knowing the
+    internal banking process.
 
 ------------------------------------------------------------------------
 
-# 5. Interview revision questions
+# 8. Common Java interview questions and answers
+
+## Inheritance
+
+### Q1. What is inheritance in Java?
+
+Inheritance is an OOP concept where one class acquires accessible fields
+and methods of another class using the `extends` keyword. It promotes
+code reusability and represents an IS-A relationship.
+
+### Q2. Does Java support multiple inheritance?
+
+Java does not support multiple inheritance through classes because it
+can create ambiguity, commonly illustrated by the diamond problem.
+However, Java supports a class implementing multiple interfaces.
+
+### Q3. What is the difference between `this` and `super`?
+
+-   `this` refers to the current object.
+-   `super` refers to the immediate parent-class portion of the current
+    object.
+
+### Q4. Are constructors inherited?
+
+No. Constructors are not inherited, but a child constructor can invoke a
+parent constructor using `super()`.
 
 ## Polymorphism
 
-1.  What is polymorphism?
-2.  What are compile-time and runtime polymorphism?
-3.  What is method overloading?
-4.  What is method overriding?
-5.  Can methods be overloaded by changing only the return type?
-6.  What is dynamic method dispatch?
-7.  Can static methods be overridden?
-8.  What is the difference between a reference type and an actual object
-    type?
-9.  Can constructors be overridden?
-10. Can private or final methods be overridden?
+### Q5. What are the types of polymorphism?
+
+1.  Compile-time polymorphism: Method overloading.
+2.  Runtime polymorphism: Method overriding.
+
+### Q6. Can we overload the main method?
+
+Yes. However, the JVM uses the standard `main(String[] args)` entry
+point.
+
+``` java
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("Main method");
+    }
+
+    public static void main(int a) {
+        System.out.println(a);
+    }
+}
+```
+
+The JVM does not automatically call the overloaded `main(int)` method.
+
+### Q7. Can we override a static method?
+
+No. Static methods belong to the class rather than individual objects. A
+subclass can hide a static method, but it does not override it.
 
 ## Encapsulation
 
-1.  What is encapsulation?
-2.  How do you achieve encapsulation in Java?
-3.  Why do we use private variables?
-4.  What are getters and setters?
-5.  Is it mandatory to create a setter for every private variable?
-6.  Can we achieve encapsulation without setters?
-7.  What is data hiding?
-8.  What are Java access modifiers?
-9.  What is the difference between encapsulation and abstraction?
-10. How does encapsulation help maintain business rules?
+### Q8. How do you achieve encapsulation in Java?
+
+By declaring fields private and providing controlled access through
+public methods, such as getters, setters or business methods.
+
+### Q9. Why should we make variables private?
+
+To prevent uncontrolled modification and help ensure that the object's
+state remains valid.
 
 ## Abstraction
 
-1.  What is abstraction?
-2.  How do you achieve abstraction in Java?
-3.  What is an abstract class?
-4.  What is an abstract method?
-5.  Can an abstract class have a constructor?
-6.  Can an abstract class contain concrete methods?
-7.  Can we instantiate an abstract class?
-8.  What is an interface?
-9.  What is the difference between an abstract class and an interface?
-10. Can a class implement multiple interfaces?
-11. Can an interface extend multiple interfaces?
-12. What are default and static methods in interfaces?
+### Q10. Can we create an object of an abstract class?
+
+No. But we can create a reference of an abstract class that points to a
+child object.
+
+``` java
+Animal animal = new Dog();
+```
+
+### Q11. Can an abstract class have a constructor?
+
+Yes. Its constructor executes when a subclass object is created.
+
+### Q12. Can an abstract class have normal methods?
+
+Yes. An abstract class can contain both abstract and concrete methods.
+
+## Interfaces
+
+### Q13. Can an interface extend multiple interfaces?
+
+Yes.
+
+``` java
+interface A {
+}
+
+interface B {
+}
+
+interface C extends A, B {
+}
+```
+
+### Q14. Can a class implement multiple interfaces?
+
+Yes.
+
+``` java
+class MyClass implements A, B {
+}
+```
+
+The class must implement the required abstract methods unless it is
+itself abstract.
+
+### Q15. Can an interface have a constructor?
+
+No. Interfaces cannot be instantiated and cannot have constructors.
+
+### Q16. What is the difference between `extends` and `implements`?
+
+-   `extends`: Used by a class to inherit another class, or by an
+    interface to inherit other interfaces.
+-   `implements`: Used by a class to implement an interface.
 
 ------------------------------------------------------------------------
 
-# 6. Practical assignments
+# 9. Quick revision sheet
 
-Try implementing these yourself without copying the examples.
+  -----------------------------------------------------------------------
+  Concept           Main idea         Important         Example
+                                      keywords          
+  ----------------- ----------------- ----------------- -----------------
+  Inheritance       Reuse parent      `extends`,        Car IS-A Vehicle
+                    functionality     `super`           
 
-### Assignment 1: Polymorphism --- Payment system
+  Polymorphism      Multiple forms of Overloading,      Different payment
+                    behavior          overriding        implementations
 
--   Create a `Payment` interface.
--   Create `UpiPayment`, `CardPayment`, and `NetBankingPayment`.
--   Implement the `pay()` method differently in each class.
--   Use a `Payment` reference to call each implementation.
+  Encapsulation     Protect and       `private`,        Private bank
+                    control internal  `public`,         balance
+                    state             `protected`       
 
-### Assignment 2: Encapsulation --- Employee management
+  Abstraction       Hide              `abstract`,       Use `withdraw()`
+                    implementation    `interface`       without knowing
+                    complexity                          its internals
 
-Create an `Employee` class with:
+  Interface         Define a contract `interface`,      UPI and Card
+                    or capability     `implements`,     implement Payment
+                                      `default`         
+  -----------------------------------------------------------------------
 
--   Private fields: `name`, `salary`, `age`.
--   Getters where required.
--   An age setter that rejects negative values.
--   An `increaseSalary(double amount)` method that accepts only positive
-    amounts.
+## One-line memory trick
 
-### Assignment 3: Abstraction --- Shape calculator
-
--   Create an abstract class called `Shape`.
--   Declare an abstract method `calculateArea()`.
--   Add a concrete method `display()`.
--   Create `Circle` and `Rectangle` classes.
--   Implement the area calculation in each child class.
-
-For a circle with radius 5 and a rectangle with length 10 and width 5,
-expected areas are approximately `78.54` and `50.0`.
+-   Inheritance = Code reuse.
+-   Polymorphism = Many forms.
+-   Encapsulation = Data protection.
+-   Abstraction = Hide complexity.
+-   Interface = Contract.
 
 ------------------------------------------------------------------------
 
-# 7. Final revision checklist
+# 10. Practice quiz
 
-Before moving to the next Java topic, make sure you can explain these
-without looking at the notes:
+Try answering these without looking at the notes.
 
--   [ ] Difference between overloading and overriding.
--   [ ] Compile-time vs runtime polymorphism.
--   [ ] Dynamic method dispatch.
--   [ ] Parent reference pointing to a child object.
--   [ ] Why variables are not overridden like instance methods.
--   [ ] Private fields, getters, setters, and validation.
--   [ ] Why encapsulation does not require setters.
--   [ ] Abstract classes and abstract methods.
--   [ ] Interfaces and the `implements` keyword.
--   [ ] Abstract class vs interface.
--   [ ] How abstraction and polymorphism work together.
+1.  Which keyword is used to inherit a class in Java?
+    -   A. `implements`
+    -   B. `extends`
+    -   C. `inherits`
+    -   D. `super`
+2.  Which type of polymorphism is method overloading?
+    -   A. Runtime
+    -   B. Compile-time
+    -   C. Dynamic
+    -   D. None
+3.  What is the main purpose of encapsulation?
+    -   A. Code duplication
+    -   B. Data protection and controlled access
+    -   C. Multiple inheritance
+    -   D. Object creation
+4.  Can we create an object of an abstract class?
+    -   A. Yes, always
+    -   B. No
+    -   C. Only with static methods
+    -   D. Only using `final`
+5.  Which keyword is used by a class to implement an interface?
+    -   A. `extends`
+    -   B. `super`
+    -   C. `implements`
+    -   D. `interface`
+6.  Can a Java class implement multiple interfaces?
+    -   A. No
+    -   B. Yes
+    -   C. Only two
+    -   D. Only if abstract
+7.  Which method is selected based on the actual object type at runtime?
+    -   A. Overloaded method
+    -   B. Overridden instance method
+    -   C. Constructor
+    -   D. Private method
 
-**Suggested next step:** Revise inheritance and then practice a small
-Java project that combines all four OOP pillars.
+## Answer key
+
+1.  B --- `extends`.
+2.  B --- Compile-time polymorphism.
+3.  B --- Data protection and controlled access.
+4.  B --- An abstract class cannot be instantiated directly.
+5.  C --- `implements`.
+6.  B --- A class can implement multiple interfaces.
+7.  B --- Dynamic method dispatch selects the overridden implementation
+    based on the actual object.
+
+------------------------------------------------------------------------
+
+# 11. Recommended next topics for Java backend development
+
+After understanding these OOP concepts, follow this learning order:
+
+1.  Exception Handling.
+2.  Collections Framework.
+3.  Generics.
+4.  Lambda Expressions.
+5.  Functional Interfaces.
+6.  Stream API.
+7.  Multithreading.
+8.  JDBC and SQL.
+9.  Spring Core and Dependency Injection.
+10. Spring Boot and REST APIs.
+
+## Final practice recommendation
+
+Build a small banking application or e-commerce payment module using all
+five OOP concepts.
+
+Try implementing:
+
+-   A `BankAccount` class with private balance.
+-   An abstract `Payment` class or a `Payment` interface.
+-   UPI and Card payment implementations.
+-   A payment service that accepts the common `Payment` type.
+-   Different implementations of the same `pay()` method.
+
+The goal is not just to memorize definitions. Understand why each
+concept is used and how it helps design maintainable Java applications.
