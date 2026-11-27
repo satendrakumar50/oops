@@ -331,23 +331,159 @@ Parent method
 A `super(...)` constructor call must be the first statement in a
 constructor. It can be used to select a parent constructor.
 
-## 1.8 When should you use inheritance?
+## 1.8 When Should You Use Inheritance?
 
-Use inheritance when there is a genuine IS-A relationship and the child
-should be substitutable for the parent.
-Substitutable (Liskov Substitution Principle)
-This is the second condition. Anywhere your code expects the parent, you should be able to pass the child and everything still works correctly, without surprises.
+Inheritance should be used when there is a genuine **IS-A relationship** between two classes.
 
-class Animal { }
-class Dog extends Animal { }                                                          // Dog IS-A Animal ✅
+However, having an IS-A relationship is not the only condition. The child class should also be **substitutable for its parent class** without changing the correctness of the program.
 
-class Car {
-    private Engine engine;                                                            // Car HAS-A Engine ✅ (composition)
+### 1. Genuine IS-A Relationship
+
+Use inheritance when one class is actually a specialized version of another class.
+
+**Example:**
+
+```java
+class Animal {
+    void eat() {
+        System.out.println("Animal is eating");
+    }
 }
 
-Do not use inheritance only to reuse a few lines of code. Composition
-(having one object use another object) can be a better design when there
-is no genuine IS-A relationship.
+class Dog extends Animal {
+    void bark() {
+        System.out.println("Dog is barking");
+    }
+}
+```
+
+Here:
+
+- Dog IS-A Animal.
+- Dog inherits the properties and methods of Animal.
+- Dog can use the `eat()` method inherited from Animal.
+
+This is a valid use of inheritance.
+
+### 2. Liskov Substitution Principle (LSP)
+
+This is the second important condition for using inheritance.
+
+**Definition:** Anywhere your code expects a parent class object, you should be able to pass an object of its child class without breaking the expected behavior of the program.
+
+**Example:**
+
+```java
+class Animal {
+    void eat() {
+        System.out.println("Animal is eating");
+    }
+}
+
+class Dog extends Animal {
+    @Override
+    void eat() {
+        System.out.println("Dog is eating");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Animal animal = new Dog();
+        animal.eat();
+    }
+}
+```
+
+**Output:**
+```text
+Dog is eating
+```
+
+Here, we can use a `Dog` object wherever an `Animal` object is expected. The program continues to work correctly.
+
+This demonstrates the Liskov Substitution Principle.
+
+### 3. Do Not Use Inheritance Just for Code Reusability
+
+Do not use inheritance only to reuse a few lines of code.
+
+Inheritance should represent a genuine IS-A relationship, not just a way to access another class's methods.
+
+When there is no genuine IS-A relationship, **Composition** is often a better choice.
+
+### 4. Composition (HAS-A Relationship)
+
+Composition means one class contains an object of another class and uses its functionality.
+
+**Example:**
+
+```java
+class Engine {
+    void start() {
+        System.out.println("Engine started");
+    }
+}
+
+class Car {
+    private Engine engine;
+
+    Car() {
+        engine = new Engine();
+    }
+
+    void startCar() {
+        engine.start();
+        System.out.println("Car started");
+    }
+}
+```
+
+**Output:**
+```text
+Engine started
+Car started
+```
+
+Here:
+- Car HAS-A Engine.
+- A car contains an engine.
+- Car uses the functionality of Engine.
+- We use composition instead of inheritance.
+
+### 5. Inheritance vs Composition
+
+| Inheritance | Composition |
+|---|---|
+| Represents IS-A relationship | Represents HAS-A relationship |
+| Uses `extends` keyword | Uses object references |
+| Creates a parent-child relationship | Creates a relationship between objects |
+| Child inherits parent functionality | One object uses another object's functionality |
+| Can create tight coupling | Generally provides more flexibility |
+
+### 6. When to Use Which?
+
+| Scenario | Recommended Approach |
+|---|---|
+| Dog is an Animal | Inheritance |
+| Car has an Engine | Composition |
+| Manager is an Employee | Inheritance |
+| Computer has a Processor | Composition |
+| Developer is an Employee | Inheritance |
+| House has Rooms | Composition |
+
+### Key Takeaways
+
+1. Use inheritance when there is a genuine IS-A relationship.
+2. Follow the Liskov Substitution Principle (LSP).
+3. Child classes should not break the expected behavior of parent classes.
+4. Do not use inheritance only for code reuse.
+5. Prefer composition when there is a HAS-A relationship.
+6. Composition often provides better flexibility and reduces tight coupling.
+
+**Interview Answer:**
+
+I use inheritance when there is a genuine IS-A relationship between classes and the child class can properly substitute the parent class without breaking its behavior, following the Liskov Substitution Principle. If I only need to reuse functionality and there is no IS-A relationship, I prefer composition over inheritance.
 
 ## 1.9 Interview answer
 
