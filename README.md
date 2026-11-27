@@ -335,6 +335,14 @@ constructor. It can be used to select a parent constructor.
 
 Use inheritance when there is a genuine IS-A relationship and the child
 should be substitutable for the parent.
+Substitutable (Liskov Substitution Principle)
+This is the second condition. Anywhere your code expects the parent, you should be able to pass the child and everything still works correctly, without surprises.
+class Animal { }
+class Dog extends Animal { }   // Dog IS-A Animal ✅
+
+class Car {
+    private Engine engine;     // Car HAS-A Engine ✅ (composition)
+}
 
 Do not use inheritance only to reuse a few lines of code. Composition
 (having one object use another object) can be a better design when there
