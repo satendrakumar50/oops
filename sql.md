@@ -1,1585 +1,1029 @@
-# SQL Notes -- 27 November 2026
+# SQL Basics and Functions: A Beginner-Friendly Deep Dive
 
-## Topics covered today
+This guide explains each topic in simple language, with small examples you can trace by hand.
+Syntax is **MySQL**-style. Where PostgreSQL differs, it is noted.
 
-1.  `SELECT`
-2.  `DISTINCT`
-3.  `WHERE`
-4.  `AND`, `OR`, `NOT`
-5.  `ORDER BY`
-6.  `LIMIT` and `OFFSET`
-7.  Aggregate functions: `COUNT()`, `SUM()`, `AVG()`, `MIN()`, `MAX()`
-8.  `GROUP BY`
-9.  `HAVING`
-10. String functions
-11. Date functions
+**Topics**
 
-------------------------------------------------------------------------
+- Part 1: SQL Basics: `SELECT`, `DISTINCT`, `WHERE`, `AND / OR / NOT`, `ORDER BY`, `LIMIT`
+- Part 2: SQL Functions: `COUNT / SUM / AVG / MIN / MAX`, `GROUP BY`, `HAVING`, String functions, Date functions
+- Part 3: How SQL runs a query (execution order), common mistakes, practice questions, cheat sheet
 
-# 1. Example table
+---
 
-We will use this `employees` table in the examples.
+## 0. The sample table used in every example
 
-    id name      age department     salary city        joining_date
-  ---- ------- ----- ------------ -------- ----------- --------------
-     1 Rahul      25 IT              50000 Delhi       2023-01-15
-     2 Amit       28 HR              40000 Mumbai      2022-06-10
-     3 Priya      24 IT              60000 Bangalore   2023-03-20
-     4 Sneha      30 Finance         55000 Delhi       2021-08-12
-     5 Karan      26 IT              45000 Mumbai      2024-02-05
-     6 Neha       28 HR              40000 Delhi       2022-11-18
-     7 Arjun      32 Finance         75000 Bangalore   2020-05-25
-     8 Pooja      23 IT              35000 Delhi       2024-07-01
+Think of a table like an Excel sheet. **Columns** are the headings, and each **row** is one record.
 
-A row represents one employee. A column represents one attribute of an
-employee.
+**Table: `employees`**
 
-------------------------------------------------------------------------
+| id | name  | city      | dept  | salary | join_date  | email             |
+|----|-------|-----------|-------|--------|------------|-------------------|
+| 1  | Asha  | Bengaluru | IT    | 60000  | 2021-03-15 | asha@example.com  |
+| 2  | Ravi  | Mumbai    | IT    | 40000  | 2022-07-01 | ravi@example.com  |
+| 3  | Meena | Delhi     | HR    | 50000  | 2020-01-10 | meena@example.com |
+| 4  | John  | Mumbai    | HR    | 30000  | 2023-05-20 | john@example.com  |
+| 5  | Kiran | Bengaluru | Sales | 70000  | 2019-11-05 | kiran@example.com |
+| 6  | Sara  | Delhi     | Sales | 45000  | 2022-02-14 | NULL              |
+| 7  | Dev   | Bengaluru | IT    | 40000  | 2024-01-08 | dev@example.com   |
 
-# 2. SELECT
+Notes:
+- `NULL` means "no value / unknown". It is **not** zero and **not** an empty string. Sara has no email.
+- There are 7 rows, 3 departments (IT, HR, Sales) and 3 cities (Bengaluru, Mumbai, Delhi).
 
-`SELECT` retrieves data from a table.
+To create it yourself:
 
-### Syntax
+```sql
+CREATE TABLE employees (
+    id        INT PRIMARY KEY,
+    name      VARCHAR(50),
+    city      VARCHAR(50),
+    dept      VARCHAR(50),
+    salary    INT,
+    join_date DATE,
+    email     VARCHAR(100)
+);
 
-``` sql
-SELECT column1, column2
-FROM table_name;
+INSERT INTO employees VALUES
+(1, 'Asha',  'Bengaluru', 'IT',    60000, '2021-03-15', 'asha@example.com'),
+(2, 'Ravi',  'Mumbai',    'IT',    40000, '2022-07-01', 'ravi@example.com'),
+(3, 'Meena', 'Delhi',     'HR',    50000, '2020-01-10', 'meena@example.com'),
+(4, 'John',  'Mumbai',    'HR',    30000, '2023-05-20', 'john@example.com'),
+(5, 'Kiran', 'Bengaluru', 'Sales', 70000, '2019-11-05', 'kiran@example.com'),
+(6, 'Sara',  'Delhi',     'Sales', 45000, '2022-02-14', NULL),
+(7, 'Dev',   'Bengaluru', 'IT',    40000, '2024-01-08', 'dev@example.com');
 ```
 
-### Select one column
+---
 
-``` sql
-SELECT name
+# PART 1: SQL BASICS
+
+---
+
+## 1. SELECT: "Show me these columns"
+
+`SELECT` chooses **which columns** to show. `FROM` says **which table** to read.
+
+```sql
+SELECT name, salary
 FROM employees;
 ```
 
-### Select multiple columns
+**Line by line**
+- `SELECT name, salary` means show only these two columns.
+- `FROM employees` means read them from the `employees` table.
+- The `;` ends the statement.
 
-``` sql
-SELECT name, age, salary
+**Result (all 7 rows, 2 columns)**
+
+| name  | salary |
+|-------|--------|
+| Asha  | 60000  |
+| Ravi  | 40000  |
+| Meena | 50000  |
+| John  | 30000  |
+| Kiran | 70000  |
+| Sara  | 45000  |
+| Dev   | 40000  |
+
+### Select all columns with `*`
+
+```sql
+SELECT * FROM employees;
+```
+
+`*` means "every column". It is fine for exploring, but in real applications list the columns you need. It is faster and doesn't break when the table changes.
+
+### Alias with `AS`: rename a column in the output
+
+```sql
+SELECT name AS employee_name, salary * 12 AS yearly_salary
 FROM employees;
 ```
 
-### Select every column
+- `AS employee_name` gives the output column a friendlier name.
+- `salary * 12` is a calculation done on every row.
+- The alias changes only the output, not the table.
 
-``` sql
-SELECT *
-FROM employees;
+| employee_name | yearly_salary |
+|---------------|---------------|
+| Asha          | 720000        |
+| Ravi          | 480000        |
+| ...           | ...           |
+
+### SELECT without a table
+
+```sql
+SELECT 2 + 3;          -- 5
+SELECT NOW();          -- current date and time
 ```
 
-`*` means all columns. In application code, prefer selecting only the
-columns you need to avoid transferring unnecessary data and coupling the
-query to the entire table structure.
+Handy for testing a function.
 
-### Calculated columns and aliases
+---
 
-``` sql
-SELECT
-    name,
-    salary,
-    salary * 12 AS annual_salary
-FROM employees;
+## 2. DISTINCT: "Remove duplicates"
+
+`DISTINCT` shows each value only once.
+
+```sql
+SELECT dept FROM employees;
 ```
 
-`AS` assigns an alias (a temporary output name) to a selected
-expression.
+Result: `IT, IT, HR, HR, Sales, Sales, IT` (7 rows, with duplicates).
 
-**Use cases:** displaying employee details, retrieving products,
-fetching orders, and supplying data to backend APIs.
-
-------------------------------------------------------------------------
-
-# 3. DISTINCT
-
-`DISTINCT` removes duplicate result rows.
-
-### Unique departments
-
-``` sql
-SELECT DISTINCT department
-FROM employees;
+```sql
+SELECT DISTINCT dept FROM employees;
 ```
 
-### Unique combinations of multiple columns
+| dept  |
+|-------|
+| IT    |
+| HR    |
+| Sales |
 
-``` sql
-SELECT DISTINCT department, city
-FROM employees;
+**Line by line**
+- SQL reads all 7 `dept` values.
+- It keeps one copy of each different value.
+- So you get 3 rows.
+
+### DISTINCT on more than one column
+
+```sql
+SELECT DISTINCT dept, city FROM employees;
 ```
 
-When multiple columns are selected, SQL removes duplicate combinations
-of those columns. It does not independently deduplicate each column.
+`DISTINCT` applies to the **combination** of columns, not each column separately.
 
-### Count unique values
+| dept  | city      |
+|-------|-----------|
+| IT    | Bengaluru |
+| IT    | Mumbai    |
+| HR    | Delhi     |
+| HR    | Mumbai    |
+| Sales | Bengaluru |
+| Sales | Delhi     |
 
-``` sql
-SELECT COUNT(DISTINCT city)
-FROM employees;
+That is 6 rows. `(IT, Bengaluru)` appears for both Asha and Dev, but is shown once.
+
+### Count distinct values
+
+```sql
+SELECT COUNT(DISTINCT city) FROM employees;   -- 3
 ```
 
-There are three unique cities in the example: Delhi, Mumbai, and
-Bangalore.
+---
 
-### DISTINCT vs UNIQUE
+## 3. WHERE: "Only the rows that match"
 
--   `DISTINCT` removes duplicates from a query's result.
--   `UNIQUE` is a database constraint that prevents duplicate values
-    from being stored in a column or combination of columns.
+`SELECT` picks columns. `WHERE` picks **rows**.
 
-------------------------------------------------------------------------
-
-# 4. WHERE
-
-`WHERE` filters individual rows using a condition.
-
-### Syntax
-
-``` sql
-SELECT column1, column2
-FROM table_name
-WHERE condition;
-```
-
-### Examples
-
-``` sql
--- Employees with salary greater than 50000
-SELECT *
+```sql
+SELECT name, salary
 FROM employees
-WHERE salary > 50000;
-
--- Employees in the IT department
-SELECT *
-FROM employees
-WHERE department = 'IT';
-
--- Employees aged at least 28
-SELECT name, age
-FROM employees
-WHERE age >= 28;
-
--- Employees earning exactly 40000
-SELECT *
-FROM employees
-WHERE salary = 40000;
+WHERE salary > 45000;
 ```
+
+**Line by line**
+- SQL goes through each row and checks `salary > 45000`.
+- If true, the row stays. If false, it is dropped.
+
+| name  | salary |
+|-------|--------|
+| Asha  | 60000  |
+| Meena | 50000  |
+| Kiran | 70000  |
+
+Sara (45000) is **not** included, because `>` means strictly greater.
 
 ### Comparison operators
 
-  Operator   Meaning                    Example
-  ---------- -------------------------- -------------------
-  `=`        Equal to                   `age = 25`
-  `!=`       Not equal to               `age != 25`
-  `<>`       Not equal to               `age <> 25`
-  `>`        Greater than               `salary > 50000`
-  `<`        Less than                  `age < 30`
-  `>=`       Greater than or equal to   `age >= 25`
-  `<=`       Less than or equal to      `salary <= 50000`
+| Operator | Meaning | Example |
+|----------|---------|---------|
+| `=` | equal | `dept = 'IT'` |
+| `<>` or `!=` | not equal | `city <> 'Delhi'` |
+| `>` `<` | greater / less | `salary > 50000` |
+| `>=` `<=` | greater or equal / less or equal | `salary >= 50000` |
+| `BETWEEN a AND b` | in a range, **inclusive** | `salary BETWEEN 40000 AND 50000` |
+| `IN (...)` | matches any value in a list | `city IN ('Delhi', 'Mumbai')` |
+| `LIKE` | pattern match | `name LIKE 'A%'` |
+| `IS NULL` / `IS NOT NULL` | check for missing value | `email IS NULL` |
 
-`!=` and `<>` are equivalent in many commonly used SQL databases.
+Remember: text values go in **single quotes** (`'IT'`), numbers don't.
 
 ### BETWEEN
 
-Checks whether a value falls within an inclusive range.
-
-``` sql
-SELECT *
-FROM employees
-WHERE salary BETWEEN 40000 AND 60000;
+```sql
+SELECT name, salary FROM employees
+WHERE salary BETWEEN 40000 AND 50000;
 ```
 
-Both boundary values, 40000 and 60000, are included.
+Result: Ravi (40000), Meena (50000), Sara (45000), Dev (40000). Both ends are included.
 
 ### IN
 
-Checks whether a value matches any item in a list.
-
-``` sql
-SELECT *
-FROM employees
+```sql
+SELECT name, city FROM employees
 WHERE city IN ('Delhi', 'Mumbai');
 ```
 
-### LIKE
+Result: Ravi, Meena, John, Sara. `IN` is a short way to write `city = 'Delhi' OR city = 'Mumbai'`.
 
-Matches text patterns.
+### LIKE: pattern matching
 
-  Pattern     Meaning
-  ----------- -------------------------
-  `'A%'`      Starts with A
-  `'%a'`      Ends with a
-  `'%h%'`     Contains h
-  `'_____'`   Exactly five characters
+Two special symbols:
+- `%` means any number of characters (including none)
+- `_` means exactly one character
 
-``` sql
--- Names starting with A
-SELECT *
-FROM employees
-WHERE name LIKE 'A%';
+| Pattern | Matches | Result on our table |
+|---------|---------|---------------------|
+| `'A%'` | starts with A | Asha |
+| `'%a'` | ends with a | Asha, Meena, Sara |
+| `'%an%'` | contains "an" | Kiran |
+| `'_ohn'` | any 1 letter, then "ohn" | John |
+
+```sql
+SELECT name FROM employees WHERE name LIKE '%a';
 ```
 
-`%` means zero or more characters. `_` means exactly one character.
+### NULL: the special case
 
-### NULL checks
-
-Use `IS NULL` and `IS NOT NULL`, not `= NULL`.
-
-``` sql
-SELECT *
-FROM employees
-WHERE salary IS NULL;
-
-SELECT *
-FROM employees
-WHERE salary IS NOT NULL;
+```sql
+SELECT name FROM employees WHERE email = NULL;     -- WRONG: returns nothing
+SELECT name FROM employees WHERE email IS NULL;    -- RIGHT: returns Sara
 ```
 
-`NULL` represents missing or unknown information. Comparisons with NULL
-generally produce UNKNOWN rather than TRUE or FALSE.
+Any comparison with `NULL` using `=`, `<>` or `>` gives "unknown", and `WHERE` only keeps rows where the condition is true. Always use `IS NULL` or `IS NOT NULL`.
 
-------------------------------------------------------------------------
+---
 
-# 5. AND, OR, and NOT
+## 4. AND, OR, NOT: combining conditions
 
-These are logical operators used to combine or reverse conditions.
+### AND: all conditions must be true
 
-## AND
-
-Returns a row only when every condition is TRUE.
-
-``` sql
-SELECT *
-FROM employees
-WHERE department = 'IT'
-  AND salary > 45000;
+```sql
+SELECT name, city, dept FROM employees
+WHERE city = 'Bengaluru' AND dept = 'IT';
 ```
 
-Both conditions must be satisfied.
+| name | city      | dept |
+|------|-----------|------|
+| Asha | Bengaluru | IT   |
+| Dev  | Bengaluru | IT   |
 
-  Condition A   Condition B   A AND B
-  ------------- ------------- ---------
-  TRUE          TRUE          TRUE
-  TRUE          FALSE         FALSE
-  FALSE         TRUE          FALSE
-  FALSE         FALSE         FALSE
+Kiran is in Bengaluru but in Sales, so the second condition fails.
 
-## OR
+### OR: at least one condition must be true
 
-Returns a row when at least one condition is TRUE.
-
-``` sql
-SELECT *
-FROM employees
-WHERE department = 'IT'
-   OR department = 'HR';
+```sql
+SELECT name, dept FROM employees
+WHERE dept = 'HR' OR dept = 'Sales';
 ```
 
-  Condition A   Condition B   A OR B
-  ------------- ------------- --------
-  TRUE          TRUE          TRUE
-  TRUE          FALSE         TRUE
-  FALSE         TRUE          TRUE
-  FALSE         FALSE         FALSE
+Result: Meena, John, Kiran, Sara.
 
-## NOT
+### NOT: flip a condition
 
-Reverses a condition.
-
-``` sql
--- Employees not in IT
-SELECT *
-FROM employees
-WHERE NOT department = 'IT';
-
--- Equivalent for non-NULL department values
-SELECT *
-FROM employees
-WHERE department <> 'IT';
-
--- Exclude IT and HR
-SELECT *
-FROM employees
-WHERE department NOT IN ('IT', 'HR');
+```sql
+SELECT name, city FROM employees
+WHERE NOT city = 'Mumbai';
 ```
 
-  Condition   NOT Condition
-  ----------- ---------------
-  TRUE        FALSE
-  FALSE       TRUE
+Result: Asha, Meena, Kiran, Sara, Dev. It is the same as `city <> 'Mumbai'`.
 
-SQL uses three-valued logic: TRUE, FALSE, and UNKNOWN. For example,
-`NOT (salary = 50000)` does not include rows where salary is NULL.
+Other forms: `NOT IN (...)`, `NOT LIKE '...'`, `NOT BETWEEN ...`, `IS NOT NULL`.
 
-## Combining logical operators
+### The order of evaluation: AND before OR
 
-``` sql
-SELECT *
-FROM employees
-WHERE (department = 'IT' OR department = 'HR')
-  AND salary > 40000
-  AND city <> 'Delhi';
+This causes many bugs. `AND` is processed **before** `OR`, like multiplication before addition.
+
+```sql
+SELECT name, dept, salary FROM employees
+WHERE dept = 'IT' OR dept = 'HR' AND salary > 45000;
 ```
 
-Parentheses make the intended grouping explicit.
+SQL reads it as:
 
-### Operator precedence
-
-SQL's logical precedence is:
-
-1.  `NOT`
-2.  `AND`
-3.  `OR`
-
-For example:
-
-``` sql
-WHERE department = 'IT'
-   OR department = 'HR'
-  AND salary > 45000;
+```
+dept = 'IT'  OR  (dept = 'HR' AND salary > 45000)
 ```
 
-This is interpreted as:
+So you get all IT employees (Asha, Ravi, Dev), plus only the HR employees with salary above 45000 (Meena). John is dropped.
 
-``` sql
-WHERE department = 'IT'
-   OR (department = 'HR' AND salary > 45000);
+If you meant "(IT or HR) and salary above 45000", use **brackets**:
+
+```sql
+WHERE (dept = 'IT' OR dept = 'HR') AND salary > 45000;
 ```
 
-It is not equivalent to:
+Result: Asha (60000) and Meena (50000).
 
-``` sql
-WHERE (department = 'IT' OR department = 'HR')
-  AND salary > 45000;
-```
+**Tip:** when mixing `AND` and `OR`, always add brackets, even if they aren't strictly needed.
 
-**Best practice:** Use parentheses whenever combining `AND` and `OR`.
+---
 
-------------------------------------------------------------------------
+## 5. ORDER BY: sort the result
 
-# 6. ORDER BY
+By default, rows come back in no guaranteed order. `ORDER BY` sorts them.
 
-`ORDER BY` sorts the result rows.
-
-### Ascending order
-
-``` sql
-SELECT name, salary
-FROM employees
-ORDER BY salary ASC;
-```
-
-`ASC` means ascending (smallest to largest for numbers). It is the
-default order.
-
-### Descending order
-
-``` sql
-SELECT name, salary
-FROM employees
+```sql
+SELECT name, salary FROM employees
 ORDER BY salary DESC;
 ```
 
-`DESC` means descending (largest to smallest for numbers).
+- `ASC` means ascending, smallest first. This is the **default**.
+- `DESC` means descending, biggest first.
 
-### Sort by multiple columns
+| name  | salary |
+|-------|--------|
+| Kiran | 70000  |
+| Asha  | 60000  |
+| Meena | 50000  |
+| Sara  | 45000  |
+| Ravi  | 40000  |
+| Dev   | 40000  |
+| John  | 30000  |
 
-``` sql
-SELECT name, department, salary
-FROM employees
-ORDER BY department ASC, salary DESC;
+Ravi and Dev both earn 40000. Their relative order here is **not guaranteed**. Fix that with a second sort column.
+
+### Sort by more than one column
+
+```sql
+SELECT name, salary FROM employees
+ORDER BY salary DESC, name ASC;
 ```
 
-This sorts departments alphabetically and sorts employees within each
-department by salary from highest to lowest.
+**How it works:** sort by `salary` first (highest first). If two rows have the same salary, sort those by `name` A to Z.
 
-A column used for sorting does not always need to appear in the SELECT
-list:
+| name  | salary |
+|-------|--------|
+| Kiran | 70000  |
+| Asha  | 60000  |
+| Meena | 50000  |
+| Sara  | 45000  |
+| Dev   | 40000  |
+| Ravi  | 40000  |
+| John  | 30000  |
 
-``` sql
-SELECT name, department
-FROM employees
-ORDER BY salary DESC;
+Now Dev comes before Ravi every time.
+
+### Other ways to sort
+
+```sql
+ORDER BY dept, salary DESC;   -- by dept A-Z, then salary high to low inside each dept
+ORDER BY 2;                   -- sort by the 2nd column in the SELECT list (works, but unclear)
+ORDER BY salary * 12 DESC;    -- sort by a calculation
 ```
 
-`ORDER BY` does not change the stored table. If multiple rows have equal
-sort values, their relative order is not guaranteed unless another
-tie-breaker column is included.
+Text sorts alphabetically, dates sort by time, and numbers sort by value. `NULL` sorts first in `ASC` in MySQL (and last in PostgreSQL).
 
-------------------------------------------------------------------------
+---
 
-# 7. LIMIT and OFFSET
+## 6. LIMIT: "Only give me N rows"
 
-`LIMIT` restricts how many rows a query returns. It is supported by
-MySQL and PostgreSQL, among other databases.
-
-### Return the first three rows
-
-``` sql
-SELECT *
-FROM employees
+```sql
+SELECT name, salary FROM employees
+ORDER BY salary DESC, name ASC
 LIMIT 3;
 ```
 
-Without `ORDER BY`, the database does not guarantee which rows will be
-returned.
+Result: Kiran, Asha, Meena. This is the **top 3 highest-paid employees**.
 
-### Top three highest-paid employees
+> **Always use `ORDER BY` with `LIMIT`.** Without it, "the first 3 rows" can be any 3 rows.
 
-``` sql
-SELECT name, salary
-FROM employees
-ORDER BY salary DESC
-LIMIT 3;
+### OFFSET: skip rows (pagination)
+
+```sql
+SELECT name, salary FROM employees
+ORDER BY salary DESC, name ASC
+LIMIT 3 OFFSET 3;
 ```
 
-Always combine `LIMIT` with a meaningful `ORDER BY` when you need a
-predictable top-N result.
+**How it works:** skip the first 3 rows, then return the next 3. Result: Sara, Dev, Ravi.
 
-### OFFSET
+Pagination pattern for a web page (page size 10):
 
-`OFFSET` skips rows before returning the requested number.
-
-``` sql
-SELECT *
-FROM employees
-ORDER BY id
-LIMIT 3 OFFSET 2;
+```sql
+-- page 1: LIMIT 10 OFFSET 0
+-- page 2: LIMIT 10 OFFSET 10
+-- page n: LIMIT 10 OFFSET (n-1)*10
 ```
 
-This skips the first two rows and returns the next three.
+MySQL also allows `LIMIT 3, 3`, which means `LIMIT offset, count`. The order is reversed compared to `OFFSET`, so it is confusing. Prefer the `OFFSET` form.
 
-### Pagination
+### Useful patterns
 
-For 10 rows per page:
+```sql
+-- highest salary employee
+SELECT name, salary FROM employees ORDER BY salary DESC LIMIT 1;
 
-    Page   LIMIT   OFFSET
-  ------ ------- --------
-       1      10        0
-       2      10       10
-       3      10       20
-       4      10       30
-
-Formula:
-
-``` text
-offset = (page - 1) * limit
+-- 2nd highest salary value
+SELECT DISTINCT salary FROM employees ORDER BY salary DESC LIMIT 1 OFFSET 1;
 ```
 
-Example backend calculation:
+The second query returns 60000. `DISTINCT` is there so tied salaries don't count twice.
 
-``` java
-int page = 2;
-int limit = 10;
+> SQL Server uses `SELECT TOP 3 ...` and Oracle uses `FETCH FIRST 3 ROWS ONLY` instead of `LIMIT`.
 
-int offset = (page - 1) * limit;
-```
+---
 
-Query:
+# PART 2: SQL FUNCTIONS
 
-``` sql
-SELECT *
-FROM employees
-ORDER BY id
-LIMIT 10 OFFSET 10;
-```
+A **function** takes some input and returns a value. There are two kinds:
 
-**Performance note:** Large OFFSET values can be expensive because the
-database may scan and skip many rows. Cursor/keyset pagination, such as
-`WHERE id > last_seen_id ORDER BY id LIMIT 10`, can be more efficient
-for large datasets.
+- **Aggregate functions** take many rows and return **one** value (`COUNT`, `SUM`, `AVG`, `MIN`, `MAX`).
+- **Scalar functions** work on **each row** and return one value per row (string and date functions).
 
-------------------------------------------------------------------------
+---
 
-# 8. Aggregate Functions
+## 7. Aggregate functions: COUNT, SUM, AVG, MIN, MAX
 
-Aggregate functions calculate a value from multiple rows and return one
-result per group. Without `GROUP BY`, they generally produce one result
-for the whole filtered set.
+| Function | What it does |
+|----------|--------------|
+| `COUNT(*)` | counts rows |
+| `COUNT(col)` | counts rows where `col` is **not NULL** |
+| `SUM(col)` | adds up the values |
+| `AVG(col)` | average of the values |
+| `MIN(col)` | smallest value |
+| `MAX(col)` | largest value |
 
-  Function    Purpose
-  ----------- --------------------------------
-  `COUNT()`   Counts rows or non-NULL values
-  `SUM()`     Calculates a numeric total
-  `AVG()`     Calculates a numeric average
-  `MIN()`     Finds the smallest value
-  `MAX()`     Finds the largest value
-
-## 8.1 COUNT()
-
-Counts rows or non-NULL values.
-
-``` sql
--- Count every row
-SELECT COUNT(*)
-FROM employees;
-
--- Count non-NULL IDs
-SELECT COUNT(id)
-FROM employees;
-
--- Count non-NULL salaries
-SELECT COUNT(salary)
-FROM employees;
-
--- Count unique cities
-SELECT COUNT(DISTINCT city)
+```sql
+SELECT COUNT(*)        AS total_employees,
+       SUM(salary)     AS total_salary,
+       AVG(salary)     AS avg_salary,
+       MIN(salary)     AS lowest,
+       MAX(salary)     AS highest
 FROM employees;
 ```
 
-Difference:
+| total_employees | total_salary | avg_salary  | lowest | highest |
+|-----------------|--------------|-------------|--------|---------|
+| 7               | 335000       | 47857.1429  | 30000  | 70000   |
 
--   `COUNT(*)` counts all rows, including rows containing NULL in
-    individual columns.
--   `COUNT(column)` counts only rows where that column is not NULL.
--   `COUNT(DISTINCT column)` counts unique non-NULL values.
+**How each value is calculated**
+- `COUNT(*)`: 7 rows.
+- `SUM`: 60000 + 40000 + 50000 + 30000 + 70000 + 45000 + 40000 = 335000.
+- `AVG`: 335000 / 7 = 47857.14...
+- `MIN` and `MAX`: the smallest and largest salary.
 
-## 8.2 SUM()
+Round it: `ROUND(AVG(salary), 2)` gives `47857.14`.
 
-Adds numeric values. NULL values are ignored.
+### COUNT(*) vs COUNT(column) vs COUNT(DISTINCT column)
 
-``` sql
-SELECT SUM(salary) AS total_salary
+```sql
+SELECT COUNT(*)              AS all_rows,       -- 7
+       COUNT(email)          AS with_email,     -- 6  (Sara's NULL is skipped)
+       COUNT(DISTINCT dept)  AS unique_depts    -- 3
 FROM employees;
 ```
 
-Total salary in the example: `400000`.
+### Important rules
 
-Filter before calculating:
+1. **Aggregates ignore NULLs** (except `COUNT(*)`). `AVG` divides by the number of non-NULL values, not total rows.
+2. An aggregate can't be used in `WHERE`. Use `HAVING` instead (section 9).
+3. `SUM` and `AVG` are for numbers. `MIN` and `MAX` also work on text and dates:
 
-``` sql
-SELECT SUM(salary) AS it_total_salary
+```sql
+SELECT MIN(name), MAX(name) FROM employees;          -- Asha, Sara (alphabetical)
+SELECT MIN(join_date), MAX(join_date) FROM employees; -- 2019-11-05, 2024-01-08
+```
+
+4. If the table (or `WHERE` result) has no rows: `COUNT` returns `0`, while `SUM`, `AVG`, `MIN`, `MAX` return `NULL`.
+
+### Aggregates with WHERE
+
+```sql
+SELECT COUNT(*), AVG(salary)
 FROM employees
-WHERE department = 'IT';
+WHERE dept = 'IT';
 ```
 
-IT department total: `190000`.
+`WHERE` filters the rows **first**, then the aggregate runs on what is left: 3 employees, average (60000+40000+40000)/3 = 46666.67.
 
-## 8.3 AVG()
+---
 
-Calculates the average of non-NULL numeric values.
+## 8. GROUP BY: one result per group
 
-Formula:
+Aggregates on their own give one answer for the whole table. `GROUP BY` splits the rows into groups and gives one answer **per group**.
 
-``` text
-Average = Sum of non-NULL values / Count of non-NULL values
-```
-
-``` sql
-SELECT AVG(salary) AS average_salary
-FROM employees;
-```
-
-Average salary in the example: `50000`.
-
-``` sql
-SELECT AVG(salary)
+```sql
+SELECT dept, COUNT(*) AS employees, AVG(salary) AS avg_salary
 FROM employees
-WHERE department = 'IT';
+GROUP BY dept;
 ```
 
-IT average salary: `47500`.
+**What SQL does, step by step**
 
-## 8.4 MIN()
+1. Looks at every row and puts it into a bucket by `dept`.
 
-Returns the smallest non-NULL value.
-
-``` sql
-SELECT MIN(salary)
-FROM employees;
+```
+IT    bucket: Asha 60000, Ravi 40000, Dev 40000
+HR    bucket: Meena 50000, John 30000
+Sales bucket: Kiran 70000, Sara 45000
 ```
 
-Lowest salary: `35000`.
+2. Runs `COUNT` and `AVG` inside each bucket.
+3. Returns one row per bucket.
 
-It also works with dates:
+| dept  | employees | avg_salary |
+|-------|-----------|------------|
+| IT    | 3         | 46666.67   |
+| HR    | 2         | 40000.00   |
+| Sales | 2         | 57500.00   |
 
-``` sql
-SELECT MIN(joining_date)
-FROM employees;
+### The golden rule of GROUP BY
+
+> Every column in `SELECT` must either be in the `GROUP BY` or be inside an aggregate function.
+
+```sql
+SELECT dept, name, COUNT(*) FROM employees GROUP BY dept;
+-- ERROR (or random name): which name should an IT group show, Asha, Ravi or Dev?
 ```
 
-This returns the earliest joining date.
+### Group by more than one column
 
-## 8.5 MAX()
-
-Returns the largest non-NULL value.
-
-``` sql
-SELECT MAX(salary)
-FROM employees;
-```
-
-Highest salary: `75000`.
-
-``` sql
-SELECT MAX(joining_date)
-FROM employees;
-```
-
-This returns the latest joining date.
-
-## 8.6 Combine aggregate functions
-
-``` sql
-SELECT
-    COUNT(*) AS total_employees,
-    SUM(salary) AS total_salary,
-    AVG(salary) AS average_salary,
-    MIN(salary) AS minimum_salary,
-    MAX(salary) AS maximum_salary
-FROM employees;
-```
-
-Expected results:
-
-  -----------------------------------------------------------------------------------
-    total_employees   total_salary   average_salary   minimum_salary   maximum_salary
-  ----------------- -------------- ---------------- ---------------- ----------------
-                  8         400000            50000            35000            75000
-
-  -----------------------------------------------------------------------------------
-
-If an aggregate function receives no non-NULL values, `SUM`, `AVG`,
-`MIN`, and `MAX` generally return NULL. `COUNT` returns zero.
-
-------------------------------------------------------------------------
-
-# 9. GROUP BY
-
-`GROUP BY` groups rows that have the same value or combination of
-values. It is commonly used with aggregate functions.
-
-## 9.1 Count employees in each department
-
-``` sql
-SELECT
-    department,
-    COUNT(*) AS total_employees
+```sql
+SELECT city, dept, COUNT(*) AS employees
 FROM employees
-GROUP BY department;
+GROUP BY city, dept;
 ```
 
-Expected result:
+Groups are unique `(city, dept)` pairs. `(Bengaluru, IT)` has 2 people (Asha and Dev).
 
-  department     total_employees
-  ------------ -----------------
-  IT                           4
-  HR                           2
-  Finance                      2
+### Group by a calculation
 
-Conceptually, SQL creates a group for IT, a group for HR, and a group
-for Finance, then counts the rows in each group.
-
-## 9.2 Total salary by department
-
-``` sql
-SELECT
-    department,
-    SUM(salary) AS total_salary
+```sql
+SELECT YEAR(join_date) AS join_year, COUNT(*) AS hires
 FROM employees
-GROUP BY department;
+GROUP BY YEAR(join_date)
+ORDER BY join_year;
 ```
 
-  department     total_salary
-  ------------ --------------
-  IT                   190000
-  HR                    80000
-  Finance              130000
+| join_year | hires |
+|-----------|-------|
+| 2019      | 1     |
+| 2020      | 1     |
+| 2021      | 1     |
+| 2022      | 2     |
+| 2023      | 1     |
+| 2024      | 1     |
 
-## 9.3 Average salary by department
+### Combine with WHERE and ORDER BY
 
-``` sql
-SELECT
-    department,
-    AVG(salary) AS average_salary
+```sql
+SELECT city, SUM(salary) AS total_salary
 FROM employees
-GROUP BY department;
+WHERE dept <> 'HR'
+GROUP BY city
+ORDER BY total_salary DESC;
 ```
 
-  department     average_salary
-  ------------ ----------------
-  IT                      47500
-  HR                      40000
-  Finance                 65000
+1. `WHERE` removes HR rows first.
+2. `GROUP BY` makes one group per city.
+3. `SUM` adds the salaries inside each group.
+4. `ORDER BY` sorts the groups.
 
-## 9.4 Minimum and maximum salary by department
+| city      | total_salary |
+|-----------|--------------|
+| Bengaluru | 170000       |
+| Delhi     | 45000        |
+| Mumbai    | 40000        |
 
-``` sql
-SELECT
-    department,
-    MIN(salary) AS minimum_salary,
-    MAX(salary) AS maximum_salary
+(Bengaluru is Asha 60000 + Kiran 70000 + Dev 40000.)
+
+---
+
+## 9. HAVING: filter the groups
+
+`WHERE` filters **rows before** grouping. `HAVING` filters **groups after** grouping.
+
+Question: which departments have more than 2 employees?
+
+```sql
+SELECT dept, COUNT(*) AS employees
 FROM employees
-GROUP BY department;
-```
-
-## 9.5 Group by multiple columns
-
-``` sql
-SELECT
-    department,
-    city,
-    COUNT(*) AS total_employees
-FROM employees
-GROUP BY department, city;
-```
-
-This creates a group for each unique department-city combination, such
-as IT + Delhi or HR + Mumbai.
-
-## 9.6 WHERE with GROUP BY
-
-`WHERE` filters rows before they are grouped.
-
-``` sql
-SELECT
-    department,
-    COUNT(*) AS total_employees
-FROM employees
-WHERE salary > 40000
-GROUP BY department;
-```
-
-Only employees with salary greater than 40000 participate in grouping.
-
-### Important GROUP BY rule
-
-Every selected column that is not inside an aggregate function should
-generally be included in the `GROUP BY` clause, subject to
-database-specific functional-dependency rules.
-
-Correct:
-
-``` sql
-SELECT department, AVG(salary)
-FROM employees
-GROUP BY department;
-```
-
-Generally invalid in standard SQL:
-
-``` sql
-SELECT department, name, AVG(salary)
-FROM employees
-GROUP BY department;
-```
-
-A department can have several names, so SQL cannot choose one employee
-name for the group without an additional rule.
-
-------------------------------------------------------------------------
-
-# 10. HAVING
-
-`HAVING` filters groups, usually after `GROUP BY`.
-
--   `WHERE` filters individual rows.
--   `HAVING` filters groups.
-
-### Syntax
-
-``` sql
-SELECT column_name, AGGREGATE_FUNCTION(column_name)
-FROM table_name
-GROUP BY column_name
-HAVING aggregate_condition;
-```
-
-## 10.1 Departments with average salary above 45000
-
-``` sql
-SELECT
-    department,
-    AVG(salary) AS average_salary
-FROM employees
-GROUP BY department
-HAVING AVG(salary) > 45000;
-```
-
-Result: IT and Finance.
-
-## 10.2 Departments with more than two employees
-
-``` sql
-SELECT
-    department,
-    COUNT(*) AS total_employees
-FROM employees
-GROUP BY department
+GROUP BY dept
 HAVING COUNT(*) > 2;
 ```
 
-Result: IT, with four employees.
+| dept | employees |
+|------|-----------|
+| IT   | 3         |
 
-## 10.3 Departments with total salary above 100000
+HR and Sales have only 2 each, so those groups are removed.
 
-``` sql
-SELECT
-    department,
-    SUM(salary) AS total_salary
+**Why not `WHERE COUNT(*) > 2`?** Because when `WHERE` runs, the groups don't exist yet, so there is nothing to count. This is the single biggest difference between the two.
+
+### WHERE and HAVING together
+
+```sql
+SELECT dept, AVG(salary) AS avg_salary
 FROM employees
-GROUP BY department
-HAVING SUM(salary) > 100000;
+WHERE city <> 'Mumbai'         -- filter rows first
+GROUP BY dept
+HAVING AVG(salary) > 45000;    -- then filter groups
 ```
 
-Result: IT and Finance.
+**Trace**
+1. `WHERE` removes Ravi and John (Mumbai). Rows left: Asha, Meena, Kiran, Sara, Dev.
+2. `GROUP BY dept`: IT has Asha 60000 and Dev 40000, HR has Meena 50000, Sales has Kiran 70000 and Sara 45000.
+3. Averages: IT = 50000, HR = 50000, Sales = 57500.
+4. `HAVING > 45000`: all three pass.
 
-## 10.4 Combine WHERE, GROUP BY, and HAVING
+| dept  | avg_salary |
+|-------|------------|
+| IT    | 50000.00   |
+| HR    | 50000.00   |
+| Sales | 57500.00   |
 
-``` sql
-SELECT
-    department,
-    COUNT(*) AS total_employees,
-    AVG(salary) AS average_salary
-FROM employees
-WHERE salary > 35000
-GROUP BY department
-HAVING COUNT(*) > 1;
-```
+### WHERE vs HAVING at a glance
 
-Process:
+| | WHERE | HAVING |
+|---|-------|--------|
+| Filters | individual rows | groups |
+| Runs | before `GROUP BY` | after `GROUP BY` |
+| Can use aggregates? | no | yes |
+| Without `GROUP BY` | works | rarely used |
 
-1.  `WHERE` removes employees earning 35000 or less.
-2.  `GROUP BY` groups the remaining rows by department.
-3.  `HAVING` keeps groups with more than one qualifying employee.
-4.  `SELECT` returns the requested results.
+**Performance tip:** filter as much as you can in `WHERE`, because it reduces the rows before grouping. Use `HAVING` only for conditions that need an aggregate.
 
-Expected result:
+---
 
-  department     total_employees   average_salary
-  ------------ ----------------- ----------------
-  IT                           3         51666.67
-  HR                           2            40000
-  Finance                      2            65000
+## 10. String functions
 
-### WHERE vs HAVING
+String functions work on text, one row at a time.
 
-  -----------------------------------------------------------------------
-  WHERE                               HAVING
-  ----------------------------------- -----------------------------------
-  Filters individual rows             Filters groups
+| Function | What it does | Example | Result |
+|----------|--------------|---------|--------|
+| `UPPER(s)` | all capitals | `UPPER('asha')` | `ASHA` |
+| `LOWER(s)` | all small letters | `LOWER('ASHA')` | `asha` |
+| `LENGTH(s)` | length in bytes (see note) | `LENGTH('Asha')` | `4` |
+| `CHAR_LENGTH(s)` | length in characters | `CHAR_LENGTH('Asha')` | `4` |
+| `CONCAT(a, b, ...)` | join strings | `CONCAT('Asha', ' - ', 'IT')` | `Asha - IT` |
+| `SUBSTRING(s, start, len)` | cut part of a string (start at 1) | `SUBSTRING('Bengaluru', 1, 3)` | `Ben` |
+| `LEFT(s, n)` / `RIGHT(s, n)` | first / last n characters | `LEFT('Bengaluru', 3)` | `Ben` |
+| `TRIM(s)` | remove spaces at both ends | `TRIM('  hi  ')` | `hi` |
+| `REPLACE(s, from, to)` | replace text | `REPLACE('2024-01-08', '-', '/')` | `2024/01/08` |
+| `INSTR(s, sub)` | position of text (0 if not found) | `INSTR('asha@example.com', '@')` | `5` |
+| `REVERSE(s)` | reverse the string | `REVERSE('abc')` | `cba` |
+| `COALESCE(a, b)` | first non-NULL value | `COALESCE(NULL, 'N/A')` | `N/A` |
 
-  Applied before grouping             Applied after grouping
+> `LENGTH` counts **bytes** in MySQL, so non-English characters can give a bigger number. Use `CHAR_LENGTH` for the real character count. In PostgreSQL, `LENGTH` counts characters.
 
-  Commonly filters ordinary column    Commonly filters aggregate results
-  values                              
+### Using them in queries
 
-  Can be used without GROUP BY        Can also be used without GROUP BY
-                                      in many databases, as a condition
-                                      on the aggregate result
-  -----------------------------------------------------------------------
+**Make a label**
 
-------------------------------------------------------------------------
-
-# 11. String Functions
-
-String functions manipulate text values.
-
-Examples include converting text to uppercase or lowercase, finding
-string length, joining strings, extracting text, removing spaces, and
-replacing text.
-
-> **Database compatibility:** String function names and behavior can
-> differ between MySQL, PostgreSQL, SQL Server, and Oracle. Examples
-> below use common syntax; differences are mentioned where relevant.
-
-## 11.1 UPPER()
-
-Converts text to uppercase.
-
-``` sql
-SELECT UPPER('hello world');
-```
-
-Result:
-
-``` text
-HELLO WORLD
-```
-
-With a table:
-
-``` sql
-SELECT UPPER(name)
+```sql
+SELECT CONCAT(name, ' (', dept, ')') AS employee_label
 FROM employees;
 ```
 
-## 11.2 LOWER()
+Result: `Asha (IT)`, `Ravi (IT)`, `Meena (HR)`, and so on.
 
-Converts text to lowercase.
+**Capital first letter, small rest** (clean messy data)
 
-``` sql
-SELECT LOWER('HELLO WORLD');
-```
-
-Result:
-
-``` text
-hello world
-```
-
-Case-normalized comparison:
-
-``` sql
-SELECT *
-FROM employees
-WHERE LOWER(name) = 'rahul';
-```
-
-For large tables, applying a function to a column in a filter may
-prevent ordinary index usage. Consider a case-insensitive collation or
-functional index where appropriate.
-
-## 11.3 LENGTH()
-
-Returns the length of a string.
-
-``` sql
-SELECT LENGTH('Rahul');
-```
-
-Result: `5`.
-
-Database differences:
-
--   MySQL `LENGTH()` counts bytes.
--   PostgreSQL `LENGTH()` counts characters.
--   SQL Server commonly uses `LEN()`.
-
-## 11.4 CHAR_LENGTH()
-
-Returns the number of characters in a string in MySQL and PostgreSQL.
-
-``` sql
-SELECT CHAR_LENGTH('Hello');
-```
-
-Result: `5`.
-
-This differs from byte length for multibyte characters.
-
-## 11.5 CONCAT()
-
-Combines strings.
-
-``` sql
-SELECT CONCAT('Satendra', ' ', 'Kumar');
-```
-
-Result:
-
-``` text
-Satendra Kumar
-```
-
-Example with columns:
-
-``` sql
-SELECT CONCAT(first_name, ' ', last_name) AS full_name
+```sql
+SELECT CONCAT(UPPER(LEFT(name, 1)), LOWER(SUBSTRING(name, 2))) AS clean_name
 FROM employees;
 ```
 
-NULL behavior differs by database. For example, MySQL `CONCAT()` returns
-NULL if an argument is NULL, whereas PostgreSQL `concat()` treats NULL
-arguments as empty strings.
+**Line by line**
+- `LEFT(name, 1)` takes the first letter.
+- `UPPER(...)` makes it a capital.
+- `SUBSTRING(name, 2)` takes everything from the 2nd character onward.
+- `LOWER(...)` makes that part small.
+- `CONCAT` joins the two pieces. So `'aSHA'` becomes `'Asha'`.
 
-## 11.6 SUBSTRING()
+**Get the username from an email**
 
-Extracts part of a string.
-
-Common syntax:
-
-``` sql
-SUBSTRING(string, start_position, length)
+```sql
+SELECT email, SUBSTRING(email, 1, INSTR(email, '@') - 1) AS username
+FROM employees
+WHERE email IS NOT NULL;
 ```
 
-Examples:
+**Trace for `asha@example.com`**
+- `INSTR(email, '@')` gives `5`, the position of `@`.
+- `5 - 1 = 4` characters before it.
+- `SUBSTRING(email, 1, 4)` gives `asha`.
 
-``` sql
-SELECT SUBSTRING('Satendra', 1, 4);
--- Sate
+**Replace a NULL with a friendly value**
 
-SELECT SUBSTRING('Hello World', 7, 5);
--- World
+```sql
+SELECT name, COALESCE(email, 'no email') AS email
+FROM employees;
 ```
 
-Positions are one-based in these common implementations.
+Sara's row shows `no email` instead of `NULL`.
 
-### Extract part of an email
+**Case-insensitive search**
 
-MySQL:
-
-``` sql
-SELECT SUBSTRING_INDEX('rahul@gmail.com', '@', 1);
--- rahul
+```sql
+SELECT name FROM employees WHERE LOWER(name) = 'asha';
 ```
 
-PostgreSQL:
+(MySQL comparisons are often case-insensitive already, depending on the collation. PostgreSQL is case-sensitive, so `LOWER` or `ILIKE` helps there.)
 
-``` sql
-SELECT SPLIT_PART('rahul@gmail.com', '@', 1);
--- rahul
+### String function notes
+
+- Positions in SQL start at **1**, not 0 (unlike Java).
+- String concatenation: MySQL uses `CONCAT(...)`. PostgreSQL and Oracle also support `||` (`'a' || 'b'`). In MySQL, `||` means OR by default.
+- If any argument to `CONCAT` is `NULL`, the whole result is `NULL` in MySQL. Wrap nullable columns with `COALESCE(col, '')`.
+- Using a function on a column inside `WHERE` (like `LOWER(name) = 'asha'`) can stop the database from using an index on that column.
+
+---
+
+## 11. Date functions
+
+Date functions work with `DATE`, `DATETIME` and `TIMESTAMP` values. Dates are written as `'YYYY-MM-DD'`.
+
+### Getting the current date and time
+
+| Function (MySQL) | Returns | PostgreSQL |
+|------------------|---------|------------|
+| `CURDATE()` | today's date | `CURRENT_DATE` |
+| `NOW()` | date and time now | `NOW()` |
+| `CURTIME()` | current time | `CURRENT_TIME` |
+
+### Pulling out parts of a date
+
+| Function | Example | Result |
+|----------|---------|--------|
+| `YEAR(d)` | `YEAR('2021-03-15')` | `2021` |
+| `MONTH(d)` | `MONTH('2021-03-15')` | `3` |
+| `DAY(d)` | `DAY('2021-03-15')` | `15` |
+| `DAYNAME(d)` | `DAYNAME('2024-01-08')` | `Monday` |
+| `MONTHNAME(d)` | `MONTHNAME('2021-03-15')` | `March` |
+| `QUARTER(d)` | `QUARTER('2021-03-15')` | `1` |
+
+PostgreSQL uses one function for all: `EXTRACT(YEAR FROM join_date)`. MySQL supports `EXTRACT` too.
+
+```sql
+SELECT name, join_date, YEAR(join_date) AS join_year
+FROM employees
+WHERE YEAR(join_date) = 2022;
 ```
 
-## 11.7 TRIM()
+Result: Ravi (2022-07-01) and Sara (2022-02-14).
 
-Removes spaces from both ends of a string.
+> For big tables, this version is faster because it can use an index on `join_date`:
+> ```sql
+> WHERE join_date >= '2022-01-01' AND join_date < '2023-01-01'
+> ```
 
-``` sql
-SELECT TRIM('   Hello World   ');
--- Hello World
+### Date arithmetic
+
+```sql
+SELECT DATE_ADD('2024-01-08', INTERVAL 30 DAY);     -- 2024-02-07
+SELECT DATE_SUB('2024-01-08', INTERVAL 1 MONTH);    -- 2023-12-08
+SELECT DATEDIFF('2024-01-08', '2024-01-01');        -- 7  (days between)
+SELECT TIMESTAMPDIFF(YEAR, '2021-03-15', '2024-01-08');  -- 2 (full years)
 ```
 
-## 11.8 LTRIM() and RTRIM()
+**Line by line**
+- `DATE_ADD(date, INTERVAL n UNIT)` adds time. Units: `DAY`, `MONTH`, `YEAR`, `HOUR`, and so on.
+- `DATE_SUB` subtracts time.
+- `DATEDIFF(later, earlier)` gives the number of **days**. The order matters, and a wrong order gives a negative number.
+- `TIMESTAMPDIFF(unit, start, end)` gives whole units, here full years. Between 2021-03-15 and 2024-01-08 only 2 full years have passed.
 
-``` sql
-SELECT LTRIM('   Hello');
--- Hello
+In PostgreSQL: `date + INTERVAL '30 days'`, `date1 - date2` (gives days) and `AGE(date1, date2)`.
 
-SELECT RTRIM('Hello   ');
--- Hello
+### Formatting a date: `DATE_FORMAT`
+
+```sql
+SELECT DATE_FORMAT('2021-03-15', '%d-%m-%Y');   -- 15-03-2021
+SELECT DATE_FORMAT('2021-03-15', '%d %M %Y');   -- 15 March 2021
 ```
 
-`LTRIM()` removes leading spaces; `RTRIM()` removes trailing spaces.
+| Code | Meaning | Example |
+|------|---------|---------|
+| `%Y` | 4-digit year | 2021 |
+| `%y` | 2-digit year | 21 |
+| `%m` | month number | 03 |
+| `%M` | month name | March |
+| `%d` | day of month | 15 |
+| `%W` | weekday name | Monday |
+| `%H:%i:%s` | hour:minute:second (24 hour) | 14:30:05 |
 
-## 11.9 REPLACE()
+PostgreSQL uses `TO_CHAR(date, 'DD-MM-YYYY')`.
 
-Replaces occurrences of one substring with another.
+### Turning text into a date: `STR_TO_DATE`
 
-``` sql
-SELECT REPLACE('Hello World', 'World', 'SQL');
--- Hello SQL
+```sql
+SELECT STR_TO_DATE('15/03/2021', '%d/%m/%Y');   -- 2021-03-15
 ```
 
-This changes the query output, not the stored table value.
+Use this when your data arrives in a non-standard format (Indian-style `dd/mm/yyyy` is common). PostgreSQL uses `TO_DATE('15/03/2021', 'DD/MM/YYYY')`.
 
-## 11.10 LEFT() and RIGHT()
+### Real examples
 
-Extract characters from the beginning or end of a string.
+**Each employee's experience in years**
 
-``` sql
-SELECT LEFT('Satendra', 4);
--- Sate
-
-SELECT RIGHT('Satendra', 3);
--- dra
+```sql
+SELECT name,
+       join_date,
+       TIMESTAMPDIFF(YEAR, join_date, CURDATE()) AS years_in_company
+FROM employees
+ORDER BY join_date;
 ```
 
-These functions are available in MySQL and some other databases; check
-the target database for equivalent syntax.
+**Employees who joined in the last 2 years**
 
-## 11.11 REVERSE()
-
-Reverses a string in databases that support this function, such as MySQL
-and SQL Server.
-
-``` sql
-SELECT REVERSE('HELLO');
--- OLLEH
+```sql
+SELECT name, join_date
+FROM employees
+WHERE join_date >= DATE_SUB(CURDATE(), INTERVAL 2 YEAR);
 ```
 
-## 11.12 POSITION() and INSTR()
+`CURDATE()` is today. Subtracting 2 years gives the cut-off date, and `>=` keeps everyone who joined after it.
 
-Find the position of a substring.
+**Hires per year, newest first**
 
-PostgreSQL:
+```sql
+SELECT YEAR(join_date) AS join_year, COUNT(*) AS hires
+FROM employees
+GROUP BY YEAR(join_date)
+ORDER BY join_year DESC;
+```
 
-``` sql
-SELECT POSITION('@' IN 'rahul@gmail.com');
+### Date function notes
+
+- A `DATE` has no time part. `DATETIME` and `TIMESTAMP` do. When comparing a `DATETIME` against a date like `'2024-01-08'`, the date is read as `'2024-01-08 00:00:00'`, so rows later that day are missed. Use a range (`>= day AND < next day`).
+- Always store dates in `DATE` columns, not text, so sorting and date math work properly.
+- In your Java code, a SQL `DATE` maps to `LocalDate` and a `DATETIME` to `LocalDateTime`.
+
+---
+
+# PART 3: PUTTING IT TOGETHER
+
+---
+
+## 12. How SQL runs your query: the execution order
+
+You **write** a query in this order:
+
+```
+SELECT -> FROM -> WHERE -> GROUP BY -> HAVING -> ORDER BY -> LIMIT
+```
+
+SQL **runs** it in this order:
+
+| Step | Clause | What happens |
+|------|--------|--------------|
+| 1 | `FROM` | pick the table |
+| 2 | `WHERE` | filter rows |
+| 3 | `GROUP BY` | make groups |
+| 4 | `HAVING` | filter groups |
+| 5 | `SELECT` | choose columns and compute expressions, aliases created |
+| 6 | `DISTINCT` | remove duplicates |
+| 7 | `ORDER BY` | sort |
+| 8 | `LIMIT` | cut the number of rows |
+
+This explains common questions:
+
+- **Why can't `WHERE` use a `SELECT` alias?** `WHERE` runs at step 2, but aliases are created at step 5.
+- **Why can `ORDER BY` use an alias?** It runs at step 7, after the alias exists.
+- **Why can't `WHERE` use `COUNT(*)`?** Groups aren't made until step 3.
+- **Why does `HAVING` work with aggregates?** It runs after the groups exist.
+
+(MySQL is lenient and lets `GROUP BY` and `HAVING` use aliases, but standard SQL and PostgreSQL don't.)
+
+### A full query traced
+
+```sql
+SELECT dept, COUNT(*) AS employees, AVG(salary) AS avg_salary
+FROM employees
+WHERE city IN ('Bengaluru', 'Mumbai')
+GROUP BY dept
+HAVING COUNT(*) >= 2
+ORDER BY avg_salary DESC
+LIMIT 2;
+```
+
+1. **FROM** `employees`: 7 rows.
+2. **WHERE**: keep Bengaluru and Mumbai. Rows left: Asha, Ravi, John, Kiran, Dev (5 rows).
+3. **GROUP BY dept**: IT (Asha 60000, Ravi 40000, Dev 40000), HR (John 30000), Sales (Kiran 70000).
+4. **HAVING COUNT(\*) >= 2**: IT has 3 (kept). HR has 1 and Sales has 1 (removed).
+5. **SELECT**: IT, 3, average 46666.67.
+6. **ORDER BY** and **LIMIT 2**: only one group left.
+
+| dept | employees | avg_salary |
+|------|-----------|------------|
+| IT   | 3         | 46666.67   |
+
+---
+
+## 13. Common mistakes
+
+| Mistake | Problem | Fix |
+|---------|---------|-----|
+| `WHERE email = NULL` | always returns nothing | `WHERE email IS NULL` |
+| `WHERE COUNT(*) > 2` | aggregate in `WHERE` | use `HAVING COUNT(*) > 2` |
+| `SELECT dept, name ... GROUP BY dept` | `name` isn't grouped or aggregated | group by it or aggregate it |
+| `A OR B AND C` | `AND` runs first | add brackets |
+| `LIMIT` without `ORDER BY` | random rows | always sort first |
+| `LIKE '%a'` for case-insensitive search on a big table | slow | consider an index or full-text search |
+| `AVG` on a column with NULLs | ignores NULLs, may surprise you | use `AVG(COALESCE(col, 0))` if NULL should count as 0 |
+| `'IT'` written as `"IT"` | double quotes can mean a column name | use single quotes for text |
+| comparing `DATETIME` to a plain date | misses the rest of that day | use a range |
+| `COUNT(col)` instead of `COUNT(*)` | skips NULL rows | use `COUNT(*)` to count rows |
+
+---
+
+## 14. Practice questions
+
+Try each one before looking at the answer.
+
+1. Show names and cities of all employees in Delhi.
+2. List the distinct cities.
+3. Show the 3 lowest-paid employees.
+4. How many employees are there in each city?
+5. Which departments have an average salary above 45000?
+6. Show employees whose name starts with `K` or ends with `a`.
+7. Show total salary paid per department, highest first.
+8. Show employees who joined after 1 Jan 2022, newest first.
+9. Show each employee's email username in capitals (skip NULL emails).
+10. How many employees joined in each year?
+
+<details>
+<summary>Answers</summary>
+
+```sql
+-- 1
+SELECT name, city FROM employees WHERE city = 'Delhi';
+
+-- 2
+SELECT DISTINCT city FROM employees;
+
+-- 3
+SELECT name, salary FROM employees ORDER BY salary ASC, name ASC LIMIT 3;
+
+-- 4
+SELECT city, COUNT(*) AS employees FROM employees GROUP BY city;
+
+-- 5
+SELECT dept, AVG(salary) AS avg_salary FROM employees
+GROUP BY dept HAVING AVG(salary) > 45000;
+
 -- 6
-```
+SELECT name FROM employees WHERE name LIKE 'K%' OR name LIKE '%a';
 
-MySQL:
-
-``` sql
-SELECT INSTR('rahul@gmail.com', '@');
--- 6
-```
-
-### String function revision
-
-  Function          Purpose
-  ----------------- --------------------------------
-  `UPPER()`         Convert to uppercase
-  `LOWER()`         Convert to lowercase
-  `LENGTH()`        Return length (bytes in MySQL)
-  `CHAR_LENGTH()`   Count characters
-  `CONCAT()`        Join strings
-  `SUBSTRING()`     Extract a substring
-  `TRIM()`          Remove surrounding spaces
-  `LTRIM()`         Remove leading spaces
-  `RTRIM()`         Remove trailing spaces
-  `REPLACE()`       Replace text
-  `LEFT()`          Extract from the left
-  `RIGHT()`         Extract from the right
-  `REVERSE()`       Reverse text
-  `POSITION()`      Find substring position
-
-------------------------------------------------------------------------
-
-# 12. Date Functions
-
-Date functions work with dates, times, and timestamps.
-
-Common data types:
-
-  -----------------------------------------------------------------------
-  Type                    Stores                  Example
-  ----------------------- ----------------------- -----------------------
-  `DATE`                  Date only               `2026-11-27`
-
-  `TIME`                  Time only               `14:30:45`
-
-  `DATETIME`              Date and time (MySQL)   `2026-11-27 14:30:45`
-
-  `TIMESTAMP`             Timestamp; timezone     `2026-11-27 14:30:45`
-                          behavior depends on     
-                          database                
-  -----------------------------------------------------------------------
-
-## 12.1 CURRENT_DATE
-
-Returns the current date according to the database session's date/time
-context.
-
-``` sql
-SELECT CURRENT_DATE;
-```
-
-Example output:
-
-``` text
-2026-11-27
-```
-
-Find employees who joined today if `joining_date` is a DATE column:
-
-``` sql
-SELECT *
-FROM employees
-WHERE joining_date = CURRENT_DATE;
-```
-
-## 12.2 CURRENT_TIME
-
-Returns the current time.
-
-``` sql
-SELECT CURRENT_TIME;
-```
-
-## 12.3 NOW()
-
-Returns the current date and time in MySQL and PostgreSQL.
-
-``` sql
-SELECT NOW();
-```
-
-Example output:
-
-``` text
-2026-11-27 12:30:45
-```
-
-Example insertion in MySQL or PostgreSQL:
-
-``` sql
-INSERT INTO orders (customer_id, created_at)
-VALUES (101, NOW());
-```
-
-SQL Server commonly uses `GETDATE()` or `SYSDATETIME()` instead.
-
-## 12.4 EXTRACT()
-
-Extracts a component from a date or timestamp.
-
-Syntax:
-
-``` sql
-EXTRACT(field FROM date_value)
-```
-
-Examples:
-
-``` sql
-SELECT EXTRACT(YEAR FROM DATE '2026-11-27');
--- 2026
-
-SELECT EXTRACT(MONTH FROM DATE '2026-11-27');
--- 11
-
-SELECT EXTRACT(DAY FROM DATE '2026-11-27');
--- 27
-```
-
-Extract joining year for every employee:
-
-``` sql
-SELECT
-    name,
-    EXTRACT(YEAR FROM joining_date) AS joining_year
-FROM employees;
-```
-
-## 12.5 YEAR(), MONTH(), DAY()
-
-These are common MySQL functions.
-
-``` sql
-SELECT YEAR(joining_date)
-FROM employees;
-
-SELECT MONTH(joining_date)
-FROM employees;
-
-SELECT DAY(joining_date)
-FROM employees;
-```
-
-PostgreSQL commonly uses `EXTRACT()` for these operations.
-
-## 12.6 DATE_ADD()
-
-Adds an interval to a date. This is MySQL syntax.
-
-``` sql
-SELECT DATE_ADD('2026-11-27', INTERVAL 7 DAY);
--- 2026-12-04
-
-SELECT DATE_ADD('2026-11-27', INTERVAL 2 MONTH);
--- 2027-01-27
-
-SELECT DATE_ADD('2026-11-27', INTERVAL 1 YEAR);
--- 2027-11-27
-```
-
-PostgreSQL equivalent:
-
-``` sql
-SELECT DATE '2026-11-27' + INTERVAL '7 days';
-```
-
-**Use cases:** subscription expiry, payment due dates, trial periods,
-and reminder dates.
-
-## 12.7 DATE_SUB()
-
-Subtracts an interval. This is MySQL syntax.
-
-``` sql
-SELECT DATE_SUB('2026-11-27', INTERVAL 7 DAY);
--- 2026-11-20
-```
-
-PostgreSQL equivalent:
-
-``` sql
-SELECT DATE '2026-11-27' - INTERVAL '7 days';
-```
-
-## 12.8 DATEDIFF()
-
-Calculates the difference between dates in days.
-
-MySQL:
-
-``` sql
-SELECT DATEDIFF('2026-11-27', '2026-11-20');
 -- 7
+SELECT dept, SUM(salary) AS total_salary FROM employees
+GROUP BY dept ORDER BY total_salary DESC;
+
+-- 8
+SELECT name, join_date FROM employees
+WHERE join_date > '2022-01-01' ORDER BY join_date DESC;
+
+-- 9
+SELECT UPPER(SUBSTRING(email, 1, INSTR(email, '@') - 1)) AS username
+FROM employees WHERE email IS NOT NULL;
+
+-- 10
+SELECT YEAR(join_date) AS join_year, COUNT(*) AS hires
+FROM employees GROUP BY YEAR(join_date) ORDER BY join_year;
 ```
 
-Calculate calendar days since each employee joined:
+Expected results for a few:
+- Q3: John (30000), Dev (40000), Ravi (40000). Dev and Ravi tie on salary, so the second sort column (`name ASC`) puts Dev before Ravi.
+- Q5: IT (46666.67) and Sales (57500.00).
+- Q6: Kiran (starts with K), Asha, Meena, Sara (end with a).
+- Q8: Dev (2024-01-08), John (2023-05-20), Ravi (2022-07-01), Sara (2022-02-14).
 
-``` sql
-SELECT
-    name,
-    DATEDIFF(CURRENT_DATE, joining_date) AS days_since_joining
-FROM employees;
+</details>
+
+---
+
+## 15. Quick cheat sheet
+
+```sql
+SELECT DISTINCT col1, col2, AGG(col3) AS alias   -- what to show
+FROM table_name                                   -- where from
+WHERE row_condition                               -- filter rows (no aggregates)
+GROUP BY col1, col2                               -- make groups
+HAVING group_condition                            -- filter groups (aggregates OK)
+ORDER BY col1 DESC, col2 ASC                      -- sort
+LIMIT n OFFSET m;                                 -- take n rows after skipping m
 ```
 
-This counts calendar days, not working days. It does not automatically
-exclude weekends or holidays.
+| Need | Use |
+|------|-----|
+| remove duplicates | `DISTINCT` |
+| missing values | `IS NULL`, `COALESCE` |
+| one result per group | `GROUP BY` + aggregate |
+| filter groups | `HAVING` |
+| top N | `ORDER BY ... LIMIT N` |
+| text cleanup | `TRIM`, `UPPER`, `LOWER`, `REPLACE`, `SUBSTRING` |
+| join text | `CONCAT` |
+| date parts | `YEAR`, `MONTH`, `DAY` |
+| date difference | `DATEDIFF`, `TIMESTAMPDIFF` |
+| date format | `DATE_FORMAT`, `STR_TO_DATE` |
 
-PostgreSQL:
-
-``` sql
-SELECT CURRENT_DATE - joining_date
-FROM employees;
-```
-
-## 12.9 DATE_FORMAT()
-
-Formats a date as a string. This is MySQL syntax.
-
-``` sql
-SELECT DATE_FORMAT('2026-11-27', '%d-%m-%Y');
--- 27-11-2026
-```
-
-Common MySQL format specifiers:
-
-  Symbol   Meaning                Example
-  -------- ---------------------- ----------
-  `%Y`     Four-digit year        2026
-  `%y`     Two-digit year         26
-  `%m`     Month number           11
-  `%M`     Full month name        November
-  `%d`     Day of month           27
-  `%H`     Hour, 24-hour format   14
-  `%i`     Minutes                30
-  `%s`     Seconds                45
-
-Example:
-
-``` sql
-SELECT DATE_FORMAT(NOW(), '%d %M %Y');
-```
-
-PostgreSQL equivalent uses `TO_CHAR()`.
-
-## 12.10 TO_CHAR()
-
-Formats date/time values as strings in PostgreSQL and Oracle.
-
-``` sql
-SELECT TO_CHAR(
-    DATE '2026-11-27',
-    'DD Mon YYYY'
-);
--- 27 Nov 2026
-```
-
-Format a time in PostgreSQL:
-
-``` sql
-SELECT TO_CHAR(
-    CURRENT_TIMESTAMP,
-    'HH24:MI:SS'
-);
-```
-
-## 12.11 LAST_DAY()
-
-Returns the last day of a month in MySQL and Oracle.
-
-``` sql
-SELECT LAST_DAY('2026-11-27');
--- 2026-11-30
-```
-
-Use cases include monthly billing, reporting, and calculating month-end
-dates.
-
-## 12.12 Filter a date range
-
-Find employees who joined during 2023:
-
-``` sql
-SELECT *
-FROM employees
-WHERE joining_date BETWEEN '2023-01-01' AND '2023-12-31';
-```
-
-`BETWEEN` includes both boundary values.
-
-### Important: Filter timestamp ranges safely
-
-If `created_at` contains both date and time, this can unintentionally
-exclude records later on November 30:
-
-``` sql
--- Potentially problematic for timestamp columns
-WHERE created_at BETWEEN '2026-11-01' AND '2026-11-30';
-```
-
-Prefer a half-open range:
-
-``` sql
-SELECT *
-FROM orders
-WHERE created_at >= '2026-11-01'
-  AND created_at < '2026-12-01';
-```
-
-This includes every timestamp in November and is generally friendly to
-indexes.
-
-### Date function revision
-
-  Function          Purpose                  Common database syntax
-  ----------------- ------------------------ ------------------------
-  `CURRENT_DATE`    Current date             MySQL, PostgreSQL
-  `CURRENT_TIME`    Current time             MySQL, PostgreSQL
-  `NOW()`           Current timestamp        MySQL, PostgreSQL
-  `EXTRACT()`       Extract date component   MySQL, PostgreSQL
-  `YEAR()`          Extract year             MySQL
-  `MONTH()`         Extract month            MySQL
-  `DAY()`           Extract day              MySQL
-  `DATE_ADD()`      Add interval             MySQL
-  `DATE_SUB()`      Subtract interval        MySQL
-  `DATEDIFF()`      Difference in days       MySQL
-  `DATE_FORMAT()`   Format date              MySQL
-  `TO_CHAR()`       Format date/time         PostgreSQL, Oracle
-  `LAST_DAY()`      Last day of month        MySQL, Oracle
-
-------------------------------------------------------------------------
-
-# 13. Logical SQL query execution order
-
-For the clauses covered in these notes, the simplified logical
-processing order is:
-
-1.  `FROM` -- identify source tables.
-2.  `WHERE` -- filter individual rows.
-3.  `GROUP BY` -- form groups.
-4.  `HAVING` -- filter groups.
-5.  `SELECT` -- calculate and select output expressions.
-6.  `DISTINCT` -- remove duplicate result rows.
-7.  `ORDER BY` -- sort results.
-8.  `LIMIT` / `OFFSET` -- restrict returned rows.
-
-Actual database engines may use a different physical execution plan for
-optimization.
-
-### Why does execution order matter?
-
-Consider:
-
-``` sql
-SELECT salary * 12 AS annual_salary
-FROM employees
-WHERE annual_salary > 500000;
-```
-
-In many databases this fails because the SELECT alias is not available
-to the WHERE clause.
-
-Use the expression directly:
-
-``` sql
-SELECT salary * 12 AS annual_salary
-FROM employees
-WHERE salary * 12 > 500000;
-```
-
-------------------------------------------------------------------------
-
-# 14. Combined real-world query
-
-Requirement:
-
-Find the top three highest-paid employees who:
-
-1.  Work in IT or HR.
-2.  Earn more than 40000.
-3.  Do not live in Delhi.
-4.  Display name, department, city, and salary.
-5.  Sort by salary from highest to lowest.
-
-``` sql
-SELECT DISTINCT
-    name,
-    department,
-    city,
-    salary
-FROM employees
-WHERE (department = 'IT' OR department = 'HR')
-  AND salary > 40000
-  AND city <> 'Delhi'
-ORDER BY salary DESC
-LIMIT 3;
-```
-
-This combines selection, duplicate removal, filtering, logical
-operators, sorting, and limiting.
-
-------------------------------------------------------------------------
-
-# 15. Interview revision questions
-
-1.  What is the difference between `SELECT *` and selecting specific
-    columns?
-2.  What is the difference between `DISTINCT` and `UNIQUE`?
-3.  What is the difference between `COUNT(*)` and `COUNT(column)`?
-4.  Does `AVG()` consider NULL values?
-5.  What is the difference between `AND` and `OR`?
-6.  What is the logical precedence of `NOT`, `AND`, and `OR`?
-7.  What is the difference between `ASC` and `DESC`?
-8.  What is the difference between `LIMIT` and `OFFSET`?
-9.  What is the purpose of `GROUP BY`?
-10. Can we group by multiple columns?
-11. What is the difference between `WHERE` and `HAVING`?
-12. Can we use aggregate functions directly in `WHERE`?
-13. What is the difference between `LENGTH()` and `CHAR_LENGTH()`?
-14. What is the difference between `CONCAT()` and `SUBSTRING()`?
-15. What is the difference between `DATE` and `TIMESTAMP`?
-16. How do you calculate the difference between two dates?
-17. How can you filter all records from a particular month?
-18. Why is a half-open timestamp range useful?
-
-------------------------------------------------------------------------
-
-# 16. Practice exercises
-
-Use the `employees` table from the beginning of this document.
-
-1.  Display the name and salary of all employees.
-2.  Find all unique departments.
-3.  Find employees whose age is greater than 25.
-4.  Find IT employees with salary greater than 45000.
-5.  Find employees who live in Delhi or Mumbai.
-6.  Find employees who do not belong to HR.
-7.  Sort employees by salary from highest to lowest.
-8.  Find the top two highest-paid employees.
-9.  Count the total number of employees.
-10. Calculate the total salary of all employees.
-11. Find the average salary of employees.
-12. Find the highest and lowest salaries.
-13. Count employees in each department.
-14. Calculate the average salary of each department.
-15. Find departments with more than two employees.
-16. Find departments whose total salary exceeds 100000.
-17. Display all employee names in uppercase.
-18. Display employee names and their lengths.
-19. Extract the year in which each employee joined.
-20. Find employees who joined during 2023.
-21. Find the latest joining date.
-22. Count the number of unique cities.
-
-## Suggested learning sequence after today's topics
-
-1.  SQL JOINs: INNER, LEFT, RIGHT, FULL OUTER, SELF JOIN.
-2.  Subqueries: nested queries, correlated subqueries, `EXISTS`, `IN`.
-3.  Constraints: PRIMARY KEY, FOREIGN KEY, UNIQUE, NOT NULL, CHECK,
-    DEFAULT.
-4.  CTEs: `WITH` clause.
-5.  Window functions: `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()`.
-6.  Indexing and query optimization.
-7.  Database normalization and transactions.
-
-------------------------------------------------------------------------
-
-## Final revision
-
-  Topic              Main purpose
-  ------------------ --------------------------------
-  SELECT             Retrieve data
-  DISTINCT           Remove duplicate results
-  WHERE              Filter rows
-  AND                Require all conditions
-  OR                 Require at least one condition
-  NOT                Reverse a condition
-  ORDER BY           Sort results
-  LIMIT              Restrict result count
-  OFFSET             Skip rows
-  COUNT              Count rows or non-NULL values
-  SUM                Calculate total
-  AVG                Calculate average
-  MIN                Find minimum
-  MAX                Find maximum
-  GROUP BY           Group similar rows
-  HAVING             Filter groups
-  String functions   Manipulate text
-  Date functions     Work with dates and times
+**Remember**
+1. `WHERE` filters rows. `HAVING` filters groups.
+2. Aggregates ignore `NULL` (except `COUNT(*)`).
+3. `AND` runs before `OR`. Use brackets.
+4. Write order is `SELECT ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY ... LIMIT`, but the run order starts at `FROM`.
+5. Always pair `LIMIT` with `ORDER BY`.
